@@ -1,0 +1,24 @@
+{
+  "name": "openid-client-certification-tests",
+  "version": "1.0.0",
+  "description": "node's openid-client library certification tests",
+  "scripts": {
+    "certification": "mocha tests -- --harmony_async_await"
+  },
+  "repository": "panva/openid-client-certification-tests",
+  "engines": {
+    "node": ">=7"
+  },
+  "homepage": "https://github.com/panva/openid-client-certification-tests",
+  "author": "Filip Skokan",
+  "license": "MIT",
+  "dependencies": {
+    "eslint": "^3.9.1",
+    "eslint-config-airbnb-base": "^9.0.0",
+    "eslint-plugin-import": "^2.0.1",
+    "github-api": "^2.3.0",
+    "mocha": "^3.1.2",
+    "openid-client": "^0.7.0",
+    "timekeeper": "^1.0.0"
+  }
+}
