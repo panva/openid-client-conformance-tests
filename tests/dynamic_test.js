@@ -4,20 +4,10 @@
 
 process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
 
-const GitHub = require('github-api');
-
-const gh = new GitHub({
-  token: process.env.GH_TOKEN,
-});
-const gist = gh.getGist('e2692453a1a8b3a6db46a5b42603fba7');
-// const JWKS_URI = 'https://rawgit.com/panva/e2692453a1a8b3a6db46a5b42603fba7/raw/jwks.json';
-const JWKS_URI = 'https://gist.githubusercontent.com/panva/e2692453a1a8b3a6db46a5b42603fba7/raw/jwks.json';
-const REQUEST = 'https://gist.githubusercontent.com/panva/e2692453a1a8b3a6db46a5b42603fba7/raw/request.jwt';
-
-const jose = require('node-jose');
 const assert = require('assert');
 const { Issuer } = require('openid-client');
 const got = require('got');
+const nock = require('nock');
 const timekeeper = require('timekeeper');
 
 function reject() { throw new Error('expected a rejection'); }
@@ -29,6 +19,9 @@ const GOT_OPTS = { followRedirect: false, retries: 0, timeout: 5000 };
 
 describe(`RP Tests ${PROFILE} profile`, function () {
   afterEach(timekeeper.reset);
+  afterEach(nock.cleanAll);
+  afterEach(() => nock.enableNetConnect());
+
   this.timeout(10000);
   describe('Discovery', function () {
     it('rp-discovery-webfinger-url', async function () {
@@ -59,6 +52,10 @@ describe(`RP Tests ${PROFILE} profile`, function () {
       const testId = 'rp-discovery-openid-configuration';
       const response = await got(`https://rp.certification.openid.net:8080/${RP_ID}/${testId}/.well-known/openid-configuration`, GOT_OPTS);
       const discovery = JSON.parse(response.body);
+      nock('https://rp.certification.openid.net:8080')
+        .get(`/${RP_ID}/${testId}/.well-known/openid-configuration`)
+        .reply(200, discovery);
+
       const ISSUER = await Issuer.discover(`https://rp.certification.openid.net:8080/${RP_ID}/${testId}`);
 
       for (const property in discovery) {
@@ -103,43 +100,6 @@ describe(`RP Tests ${PROFILE} profile`, function () {
       const secondAuthorization = await got(CLIENT.authorizationUrl({ redirect_uri }), GOT_OPTS);
       const secondParams = CLIENT.callbackParams(secondAuthorization.headers.location);
       await CLIENT.authorizationCallback(redirect_uri, secondParams);
-    });
-
-    it('rp-key-rotation-rp-sign-key', async function () {
-      const testId = 'rp-key-rotation-rp-sign-key';
-      const ISSUER = await Issuer.discover(`https://rp.certification.openid.net:8080/${RP_ID}/${testId}`);
-
-      const keystore = jose.JWK.createKeyStore();
-
-      await keystore.generate('RSA', 1024);
-      let ref = await jose.JWS.createSign({ fields: { alg: 'RS256', typ: 'JWT' }, format: 'compact' }, { key: keystore.get() })
-        .update(JSON.stringify({ redirect_uri })).final();
-
-      await gist.update({
-        files: {
-          'jwks.json': { content: JSON.stringify(keystore.toJSON()) },
-          'request.jwt': { content: ref },
-        },
-      });
-
-      keystore.remove(keystore.get());
-
-      const CLIENT = await ISSUER.Client.register({ redirect_uris, request_object_signing_alg: 'RS256', jwks_uri: JWKS_URI });
-
-      await got(CLIENT.authorizationUrl({ redirect_uri, request_uri: `${REQUEST}#${Math.random()}` }), GOT_OPTS);
-
-      await keystore.generate('RSA', 1024);
-      ref = await jose.JWS.createSign({ fields: { alg: 'RS256', typ: 'JWT' }, format: 'compact' }, { key: keystore.get() })
-        .update(JSON.stringify({ redirect_uri })).final();
-
-      await gist.update({
-        files: {
-          'jwks.json': { content: JSON.stringify(keystore.toJSON()) },
-          'request.jwt': { content: ref },
-        },
-      });
-
-      await got(CLIENT.authorizationUrl({ redirect_uri, request_uri: `${REQUEST}#${Math.random()}` }), GOT_OPTS);
     });
   });
 });

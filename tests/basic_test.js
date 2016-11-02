@@ -164,20 +164,6 @@ describe(`RP Tests ${PROFILE} profile`, function () {
       const params = CLIENT.callbackParams(authorization.headers.location);
       await CLIENT.authorizationCallback(redirect_uri, params);
     });
-
-    it('rp-id_token-kid-absent-multiple-jwks', async function () { // optional
-      const testId = 'rp-id_token-kid-absent-multiple-jwks';
-      const { CLIENT } = await register(RP_ID, testId, { redirect_uris });
-      const authorization = await got(CLIENT.authorizationUrl({ redirect_uri }), GOT_OPTS);
-
-      const params = CLIENT.callbackParams(authorization.headers.location);
-      try {
-        await CLIENT.authorizationCallback(redirect_uri, params);
-        reject();
-      } catch (err) {
-        assert.equal(err.message, 'multiple matching keys, kid must be provided');
-      }
-    });
   });
 
   describe('UserInfo Endpoint', function () {

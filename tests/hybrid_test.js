@@ -194,7 +194,7 @@ describe(`RP Tests ${PROFILE} profile`, function () {
       }
     });
 
-    it.skip('rp-id_token-sub', async function () { // does not allow other than code response_types;
+    it.skip('rp-id_token-sub', async function () { // broken, does not allow other than code response_types;
       const testId = 'rp-id_token-sub';
       const { CLIENT } = await register(RP_ID, testId, { redirect_uris, response_types: ['code id_token'], grant_types: ['implicit', 'authorization_code'] });
       const nonce = String(Math.random());
@@ -219,7 +219,7 @@ describe(`RP Tests ${PROFILE} profile`, function () {
       await CLIENT.authorizationCallback(redirect_uri, params, { nonce });
     });
 
-    it('rp-id_token-kid-absent-multiple-jwks', async function () { // optional
+    it('rp-id_token-kid-absent-multiple-jwks', async function () {
       const testId = 'rp-id_token-kid-absent-multiple-jwks';
       const { CLIENT } = await register(RP_ID, testId, { redirect_uris, response_types: ['code id_token'], grant_types: ['implicit', 'authorization_code'] });
       const nonce = String(Math.random());

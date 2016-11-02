@@ -7,6 +7,7 @@ process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
 const assert = require('assert');
 const { Issuer } = require('openid-client');
 const got = require('got');
+const nock = require('nock');
 const timekeeper = require('timekeeper');
 
 function reject() { throw new Error('expected a rejection'); }
@@ -18,6 +19,9 @@ const GOT_OPTS = { followRedirect: false, retries: 0, timeout: 5000 };
 
 describe(`RP Tests ${PROFILE} profile`, function () {
   afterEach(timekeeper.reset);
+  afterEach(nock.cleanAll);
+  afterEach(() => nock.enableNetConnect());
+
   this.timeout(10000);
   describe('Discovery', function () {
     it('rp-discovery-issuer-not-matching-config', async function () {
@@ -34,6 +38,10 @@ describe(`RP Tests ${PROFILE} profile`, function () {
       const testId = 'rp-discovery-openid-configuration';
       const response = await got(`https://rp.certification.openid.net:8080/${RP_ID}/${testId}/.well-known/openid-configuration`, GOT_OPTS);
       const discovery = JSON.parse(response.body);
+      nock('https://rp.certification.openid.net:8080')
+        .get(`/${RP_ID}/${testId}/.well-known/openid-configuration`)
+        .reply(200, discovery);
+
       const ISSUER = await Issuer.discover(`https://rp.certification.openid.net:8080/${RP_ID}/${testId}`);
 
       for (const property in discovery) {
