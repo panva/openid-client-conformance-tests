@@ -14,8 +14,9 @@
   "license": "MIT",
   "dependencies": {
     "eslint": "^3.9.1",
-    "eslint-config-airbnb-base": "^9.0.0",
+    "eslint-config-airbnb-base": "^10.0.0",
     "eslint-plugin-import": "^2.0.1",
+    "got": "^6.6.3",
     "mocha": "^3.1.2",
     "nock": "^9.0.2",
     "openid-client": "^0.7.0",

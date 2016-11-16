@@ -1,47 +1,52 @@
 'use strict';
 
-/* eslint-disable import/no-extraneous-dependencies, no-console, func-names, camelcase, no-unreachable, max-len, prefer-arrow-callback, no-restricted-syntax, guard-for-in */
+/* eslint-disable func-names, prefer-arrow-callback, no-restricted-syntax, guard-for-in, no-console, max-len */
 
-process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
+const { Issuer } = require('openid-client');
+const {
+  clear,
+  download,
+  noFollow,
+  redirect_uri,
+  redirect_uris,
+  reject,
+  root,
+  rpId,
+} = require('./test_helper')('dynamic');
 
 const assert = require('assert');
-const { Issuer } = require('openid-client');
 const got = require('got');
 const nock = require('nock');
 const timekeeper = require('timekeeper');
 
-function reject() { throw new Error('expected a rejection'); }
-const PROFILE = 'dynamic';
-const RP_ID = `${PROFILE}-node-openid-client`;
-const redirect_uri = `https://${RP_ID}.dev/cb`;
-const redirect_uris = [redirect_uri];
-const GOT_OPTS = { followRedirect: false, retries: 0, timeout: 5000 };
-
-describe(`RP Tests ${PROFILE} profile`, function () {
+describe('RP Tests DYNAMIC profile', function () {
   afterEach(timekeeper.reset);
   afterEach(nock.cleanAll);
   afterEach(() => nock.enableNetConnect());
+
+  before(clear);
+  after(download);
 
   this.timeout(10000);
   describe('Discovery', function () {
     it('rp-discovery-webfinger-url', async function () {
       const testId = 'rp-discovery-webfinger-url';
 
-      const issuer = await Issuer.webfinger(`https://rp.certification.openid.net:8080/${RP_ID}/${testId}/joe`);
-      assert.equal(issuer.issuer, `https://rp.certification.openid.net:8080/${RP_ID}/${testId}`);
+      const issuer = await Issuer.webfinger(`${root}/${rpId}/${testId}/joe`);
+      assert.equal(issuer.issuer, `${root}/${rpId}/${testId}`);
     });
 
     it('rp-discovery-webfinger-acct', async function () {
       const testId = 'rp-discovery-webfinger-acct';
 
-      const issuer = await Issuer.webfinger(`acct:${RP_ID}.${testId}@rp.certification.openid.net:8080`);
-      assert.equal(issuer.issuer, `https://rp.certification.openid.net:8080/${RP_ID}/${testId}`);
+      const issuer = await Issuer.webfinger(`acct:${rpId}.${testId}@rp.certification.openid.net:8080`);
+      assert.equal(issuer.issuer, `${root}/${rpId}/${testId}`);
     });
 
     it('rp-discovery-issuer-not-matching-config', async function () {
       const testId = 'rp-discovery-issuer-not-matching-config';
       try {
-        await Issuer.webfinger(`https://rp.certification.openid.net:8080/${RP_ID}/${testId}`);
+        await Issuer.webfinger(`${root}/${rpId}/${testId}`);
         reject();
       } catch (err) {
         assert.equal(err.message, 'discovered issuer mismatch');
@@ -50,17 +55,17 @@ describe(`RP Tests ${PROFILE} profile`, function () {
 
     it('rp-discovery-openid-configuration', async function () {
       const testId = 'rp-discovery-openid-configuration';
-      const response = await got(`https://rp.certification.openid.net:8080/${RP_ID}/${testId}/.well-known/openid-configuration`, GOT_OPTS);
+      const response = await got(`${root}/${rpId}/${testId}/.well-known/openid-configuration`, noFollow);
       const discovery = JSON.parse(response.body);
-      nock('https://rp.certification.openid.net:8080')
-        .get(`/${RP_ID}/${testId}/.well-known/openid-configuration`)
+      nock(root)
+        .get(`/${rpId}/${testId}/.well-known/openid-configuration`)
         .reply(200, discovery);
 
-      const ISSUER = await Issuer.discover(`https://rp.certification.openid.net:8080/${RP_ID}/${testId}`);
+      const issuer = await Issuer.discover(`${root}/${rpId}/${testId}`);
 
       for (const property in discovery) {
-        if (ISSUER.metadata[property]) {
-          assert.deepEqual(discovery[property], ISSUER.metadata[property]);
+        if (issuer.metadata[property]) {
+          assert.deepEqual(discovery[property], issuer.metadata[property]);
         } else {
           console.warn('skipping property', property);
         }
@@ -69,8 +74,8 @@ describe(`RP Tests ${PROFILE} profile`, function () {
 
     it('rp-discovery-jwks_uri-keys', async function () {
       const testId = 'rp-discovery-jwks_uri-keys';
-      const ISSUER = await Issuer.discover(`https://rp.certification.openid.net:8080/${RP_ID}/${testId}`);
-      const jwks = await ISSUER.keystore();
+      const issuer = await Issuer.discover(`${root}/${rpId}/${testId}`);
+      const jwks = await issuer.keystore();
 
       assert.equal(jwks.all().length, 4);
     });
@@ -79,27 +84,27 @@ describe(`RP Tests ${PROFILE} profile`, function () {
   describe('Dynamic Client Registration', function () {
     it('rp-registration-dynamic', async function () {
       const testId = 'rp-key-rotation-op-sign-key';
-      const ISSUER = await Issuer.discover(`https://rp.certification.openid.net:8080/${RP_ID}/${testId}`);
-      const CLIENT = await ISSUER.Client.register({ redirect_uris });
+      const issuer = await Issuer.discover(`${root}/${rpId}/${testId}`);
+      const client = await issuer.Client.register({ redirect_uris });
 
-      assert.equal(CLIENT.issuer, ISSUER);
+      assert.equal(client.issuer, issuer);
     });
   });
 
   describe('Key Rotation', function () {
     it('rp-key-rotation-op-sign-key', async function () {
       const testId = 'rp-key-rotation-op-sign-key';
-      const ISSUER = await Issuer.discover(`https://rp.certification.openid.net:8080/${RP_ID}/${testId}`);
-      const CLIENT = await ISSUER.Client.register({ redirect_uris });
-      const authorization = await got(CLIENT.authorizationUrl({ redirect_uri }), GOT_OPTS);
-      const params = CLIENT.callbackParams(authorization.headers.location);
-      await CLIENT.authorizationCallback(redirect_uri, params);
+      const issuer = await Issuer.discover(`${root}/${rpId}/${testId}`);
+      const client = await issuer.Client.register({ redirect_uris });
+      const authorization = await got(client.authorizationUrl({ redirect_uri }), noFollow);
+      const params = client.callbackParams(authorization.headers.location);
+      await client.authorizationCallback(redirect_uri, params);
 
       timekeeper.travel(Date.now() + (61 * 1000)); // travel one minute from now, making the cached keystore stale
 
-      const secondAuthorization = await got(CLIENT.authorizationUrl({ redirect_uri }), GOT_OPTS);
-      const secondParams = CLIENT.callbackParams(secondAuthorization.headers.location);
-      await CLIENT.authorizationCallback(redirect_uri, secondParams);
+      const secondAuthorization = await got(client.authorizationUrl({ redirect_uri }), noFollow);
+      const secondParams = client.callbackParams(secondAuthorization.headers.location);
+      await client.authorizationCallback(redirect_uri, secondParams);
     });
   });
 });
