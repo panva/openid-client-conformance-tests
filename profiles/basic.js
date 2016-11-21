@@ -34,8 +34,7 @@ describe('RP Tests - BASIC profile', function () {
 
   describe('scope Request Parameter', function () {
     it('rp-scope-userinfo-claims', async function () { // optional
-      const testId = 'rp-scope-userinfo-claims';
-      const { client } = await register(testId, { redirect_uris });
+      const { client } = await register('rp-scope-userinfo-claims', { redirect_uris });
       const authorization = await got(client.authorizationUrl({ redirect_uri, scope: 'openid email' }), noFollow);
 
       const params = client.callbackParams(authorization.headers.location);
@@ -47,8 +46,7 @@ describe('RP Tests - BASIC profile', function () {
 
   describe('nonce Request Parameter', function () {
     it('rp-nonce-invalid', async function () {
-      const testId = 'rp-nonce-invalid';
-      const { client } = await register(testId, { redirect_uris });
+      const { client } = await register('rp-nonce-invalid', { redirect_uris });
       const nonce = String(Math.random());
       const authorization = await got(client.authorizationUrl({ redirect_uri, nonce }), noFollow);
 
@@ -64,8 +62,7 @@ describe('RP Tests - BASIC profile', function () {
 
   describe('Client Authentication', function () {
     it('rp-token_endpoint-client_secret_basic', async function () {
-      const testId = 'rp-token_endpoint-client_secret_basic';
-      const { client } = await register(testId, { redirect_uris });
+      const { client } = await register('rp-token_endpoint-client_secret_basic', { redirect_uris });
       const authorization = await got(client.authorizationUrl({ redirect_uri }), noFollow);
 
       const params = client.callbackParams(authorization.headers.location);
@@ -76,8 +73,7 @@ describe('RP Tests - BASIC profile', function () {
 
   describe('ID Token', function () {
     it('rp-id_token-bad-sig-rs256', async function () { // optional
-      const testId = 'rp-id_token-bad-sig-rs256';
-      const { client } = await register(testId, { redirect_uris });
+      const { client } = await register('rp-id_token-bad-sig-rs256', { redirect_uris });
       const authorization = await got(client.authorizationUrl({ redirect_uri }), noFollow);
 
       const params = client.callbackParams(authorization.headers.location);
@@ -90,8 +86,7 @@ describe('RP Tests - BASIC profile', function () {
     });
 
     it('rp-id_token-sig-none', async function () { // optional
-      const testId = 'rp-id_token-sig-none';
-      const issuer = await Issuer.discover(`${root}/${rpId}/${testId}`);
+      const issuer = await Issuer.discover(`${root}/${rpId}/rp-id_token-sig-none`);
       const client = await issuer.Client.register({ redirect_uris, id_token_signed_response_alg: 'none' });
       const authorization = await got(client.authorizationUrl({ redirect_uri }), noFollow);
 
@@ -101,8 +96,7 @@ describe('RP Tests - BASIC profile', function () {
     });
 
     it('rp-id_token-issuer-mismatch', async function () {
-      const testId = 'rp-id_token-issuer-mismatch';
-      const { client } = await register(testId, { redirect_uris });
+      const { client } = await register('rp-id_token-issuer-mismatch', { redirect_uris });
       const authorization = await got(client.authorizationUrl({ redirect_uri }), noFollow);
 
       const params = client.callbackParams(authorization.headers.location);
@@ -115,8 +109,7 @@ describe('RP Tests - BASIC profile', function () {
     });
 
     it('rp-id_token-iat', async function () {
-      const testId = 'rp-id_token-iat';
-      const { client } = await register(testId, { redirect_uris });
+      const { client } = await register('rp-id_token-iat', { redirect_uris });
       const authorization = await got(client.authorizationUrl({ redirect_uri }), noFollow);
 
       const params = client.callbackParams(authorization.headers.location);
@@ -129,8 +122,7 @@ describe('RP Tests - BASIC profile', function () {
     });
 
     it('rp-id_token-aud', async function () {
-      const testId = 'rp-id_token-aud';
-      const { client } = await register(testId, { redirect_uris });
+      const { client } = await register('rp-id_token-aud', { redirect_uris });
       const authorization = await got(client.authorizationUrl({ redirect_uri }), noFollow);
 
       const params = client.callbackParams(authorization.headers.location);
@@ -143,8 +135,7 @@ describe('RP Tests - BASIC profile', function () {
     });
 
     it('rp-id_token-sub', async function () {
-      const testId = 'rp-id_token-sub';
-      const { client } = await register(testId, { redirect_uris });
+      const { client } = await register('rp-id_token-sub', { redirect_uris });
       const authorization = await got(client.authorizationUrl({ redirect_uri }), noFollow);
 
       const params = client.callbackParams(authorization.headers.location);
@@ -157,8 +148,7 @@ describe('RP Tests - BASIC profile', function () {
     });
 
     it('rp-id_token-kid-absent-single-jwks', async function () { // optional
-      const testId = 'rp-id_token-kid-absent-single-jwks';
-      const { client } = await register(testId, { redirect_uris });
+      const { client } = await register('rp-id_token-kid-absent-single-jwks', { redirect_uris });
       const authorization = await got(client.authorizationUrl({ redirect_uri }), noFollow);
 
       const params = client.callbackParams(authorization.headers.location);
@@ -166,8 +156,7 @@ describe('RP Tests - BASIC profile', function () {
     });
 
     it('rp-id_token-kid-absent-multiple-jwks', async function () {
-      const testId = 'rp-id_token-kid-absent-multiple-jwks';
-      const { client } = await register(testId, { redirect_uris });
+      const { client } = await register('rp-id_token-kid-absent-multiple-jwks', { redirect_uris });
       const authorization = await got(client.authorizationUrl({ redirect_uri }), noFollow);
 
       const params = client.callbackParams(authorization.headers.location);
@@ -182,8 +171,7 @@ describe('RP Tests - BASIC profile', function () {
 
   describe('UserInfo Endpoint', function () {
     it('rp-userinfo-bearer-header', async function () {
-      const testId = 'rp-userinfo-bearer-header';
-      const { client } = await register(testId, { redirect_uris });
+      const { client } = await register('rp-userinfo-bearer-header', { redirect_uris });
       const authorization = await got(client.authorizationUrl({ redirect_uri }), noFollow);
 
       const params = client.callbackParams(authorization.headers.location);
@@ -192,8 +180,7 @@ describe('RP Tests - BASIC profile', function () {
     });
 
     it('rp-userinfo-bearer-body', async function () {
-      const testId = 'rp-userinfo-bearer-body';
-      const { client } = await register(testId, { redirect_uris });
+      const { client } = await register('rp-userinfo-bearer-body', { redirect_uris });
       const authorization = await got(client.authorizationUrl({ redirect_uri }), noFollow);
 
       const params = client.callbackParams(authorization.headers.location);
@@ -202,8 +189,7 @@ describe('RP Tests - BASIC profile', function () {
     });
 
     it('rp-userinfo-bad-sub-claim', async function () {
-      const testId = 'rp-userinfo-bad-sub-claim';
-      const { client } = await register(testId, { redirect_uris });
+      const { client } = await register('rp-userinfo-bad-sub-claim', { redirect_uris });
       const authorization = await got(client.authorizationUrl({ redirect_uri }), noFollow);
 
       const params = client.callbackParams(authorization.headers.location);

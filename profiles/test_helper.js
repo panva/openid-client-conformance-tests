@@ -7,12 +7,19 @@ process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
 const { Issuer } = require('openid-client');
 const got = require('got');
 const fs = require('fs');
+// const { description } = require('./test_list');
 
 const rpId = 'node-openid-client';
 const root = 'https://rp.certification.openid.net:8080';
 const redirectUri = `https://${rpId}.dev/cb`;
 
 module.exports = function bootstrap(profile) {
+  // const theIt = it;
+  // it = function newIt() {
+  //   arguments[0] = description(arguments[0]);
+  //   theIt.apply(this, arguments);
+  // };
+
   return {
     noFollow: { followRedirect: false },
     root,

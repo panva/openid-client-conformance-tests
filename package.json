@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "description": "node's openid-client library certification tests",
   "scripts": {
-    "certification": "mocha tests -- --harmony_async_await"
+    "test": "mocha profiles -- --harmony_async_await"
   },
   "repository": "panva/openid-client-certification-tests",
   "engines": {
