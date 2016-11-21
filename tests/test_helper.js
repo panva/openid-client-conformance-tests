@@ -1,5 +1,7 @@
 'use strict';
 
+/* eslint-disable no-console */
+
 process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
 
 const { Issuer } = require('openid-client');
@@ -16,10 +18,29 @@ module.exports = function bootstrap(profile) {
     root,
     rpId,
     clear() {
-      return got(`${root}/clear/${rpId}`);
+      return got(`${root}/log/${rpId}`).then((logIndex) => {
+        if (/Clear all test logs/.exec(logIndex.body)) {
+          console.log('Clearing logs');
+          return got(`${root}/clear/${rpId}`).then(() => {
+            console.log('Clearing logs - DONE');
+          });
+        }
+        return Promise.resolve();
+      });
     },
     download() {
-      return got(`${root}/mktar/${rpId}`).then(response => fs.writeFileSync(`${profile}-${rpId}.tar`, response.body));
+      return got(`${root}/log/${rpId}`).then((logIndex) => {
+        if (/Download tar file/.exec(logIndex.body)) {
+          console.log('Downloading logs');
+          const filename = `${profile}-${rpId}.tar`;
+          return got(`${root}/mktar/${rpId}`)
+            .then(tar => fs.writeFileSync(filename, tar.body))
+            .then(() => {
+              console.log('Downloading logs - DONE -', filename);
+            });
+        }
+        return Promise.resolve();
+      });
     },
     redirect_uri: redirectUri,
     redirect_uris: [redirectUri],
