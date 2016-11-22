@@ -1,6 +1,7 @@
 'use strict';
 
 const { forEach } = require('lodash');
+const jose = require('node-jose');
 const {
   noFollow,
   redirect_uri,
@@ -61,9 +62,33 @@ describe('UserInfo Endpoint', function () {
     await client.userinfo(tokens);
   });
 
-  it('rp-userinfo-sig+enc');
+  it('rp-userinfo-sig+enc', async function () {
+    const keystore = jose.JWK.createKeyStore();
+    await keystore.generate('RSA', 512);
+    const { client } = await register('rp-userinfo-sig+enc', { userinfo_signed_response_alg: 'RS256', userinfo_encrypted_response_alg: 'RSA1_5', redirect_uris }, keystore);
+    assert.equal(client.userinfo_signed_response_alg, 'RS256');
+    assert.equal(client.userinfo_encrypted_response_alg, 'RSA1_5');
+    const authorization = await got(client.authorizationUrl({ redirect_uri, response_type: 'code' }), noFollow);
 
-  it('rp-userinfo-enc');
+    const params = client.callbackParams(authorization.headers.location);
+    const tokens = await client.authorizationCallback(redirect_uri, params);
+    const userinfo = await client.userinfo(tokens);
+    assert(userinfo.sub);
+  });
+
+  it('rp-userinfo-enc', async function () {
+    const keystore = jose.JWK.createKeyStore();
+    await keystore.generate('RSA', 512);
+    const { client } = await register('rp-userinfo-enc', { userinfo_signed_response_alg: 'none', userinfo_encrypted_response_alg: 'RSA1_5', redirect_uris }, keystore);
+    assert.equal(client.userinfo_signed_response_alg, 'none');
+    assert.equal(client.userinfo_encrypted_response_alg, 'RSA1_5');
+    const authorization = await got(client.authorizationUrl({ redirect_uri, response_type: 'code' }), noFollow);
+
+    const params = client.callbackParams(authorization.headers.location);
+    const tokens = await client.authorizationCallback(redirect_uri, params);
+    const userinfo = await client.userinfo(tokens);
+    assert(userinfo.sub);
+  });
 
   describe('rp-userinfo-bad-sub-claim', function () {
     forEach({
