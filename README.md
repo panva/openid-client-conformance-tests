@@ -15,7 +15,7 @@ $ node -v
 v7.x.x
 $ npm install
 ...
-$ npm run test
+$ npm run "basic" # or "implicit", "hybrid", "config", "dynamic"
 ...
 ```
 

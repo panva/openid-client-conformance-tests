@@ -1,0 +1,4 @@
+--no-colors
+--timeout 10000
+--reporter list
+--harmony_async_await

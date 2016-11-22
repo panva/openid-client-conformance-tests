@@ -5,6 +5,10 @@
     "no-param-reassign": ["error", { "props": false }],
     "prefer-rest-params": "off",
     "prefer-spread": "off",
-    "strict": "off"
+    "strict": "off",
+    "max-len": "off",
+    "func-names": "off",
+    "prefer-arrow-callback": "off",
+    "camelcase": "off"
   }
 }
