@@ -27,7 +27,7 @@
     "mocha": "^3.1.2",
     "nock": "^9.0.2",
     "node-jose": "^0.9.1",
-    "openid-client": "^1.0.1",
+    "openid-client": "^1.1.0",
     "timekeeper": "^1.0.0"
   }
 }

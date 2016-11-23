@@ -32,6 +32,8 @@ before(function () {
   });
 });
 
+Issuer.defaultHttpOptions = { timeout: 2500 };
+
 if (profile) {
   after(function () {
     return got(`${root}/log/${rpId}`).then((logIndex) => {
@@ -55,9 +57,17 @@ module.exports = {
   rpId,
   redirect_uri: redirectUri,
   redirect_uris: [redirectUri],
+  discover(testId) {
+    return Issuer.discover(`${root}/${rpId}/${testId}`);
+  },
   async register(testId, metadata, keystore) {
     const issuer = await Issuer.discover(`${root}/${rpId}/${testId}`);
-    const client = await issuer.Client.register(metadata, keystore);
+    const client = await issuer.Client.register(Object.assign({
+      client_name: Issuer.defaultHttpOptions.headers['User-Agent'],
+      redirect_uris: [redirectUri],
+      response_types: ['code', 'token', 'id_token', 'code token', 'code id_token', 'id_token token', 'code id_token token', 'none'],
+      grant_types: ['implicit', 'authorization_code'],
+    }, metadata), keystore);
     return { issuer, client };
   },
   reject() { throw new Error('expected a rejection'); },

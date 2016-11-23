@@ -4,6 +4,7 @@
 
 const { Issuer } = require('openid-client');
 const {
+  discover,
   noFollow,
   reject,
   root,
@@ -49,7 +50,7 @@ describe('Discovery', function () {
       .get(`/${rpId}/${testId}/.well-known/openid-configuration`)
       .reply(200, discovery);
 
-    const issuer = await Issuer.discover(`${root}/${rpId}/${testId}`);
+    const issuer = await discover(testId);
 
     for (const property in discovery) {
       if (issuer.metadata[property]) {
@@ -59,7 +60,7 @@ describe('Discovery', function () {
   });
 
   it('rp-discovery-jwks_uri-keys @config,@dynamic', async function () {
-    const issuer = await Issuer.discover(`${root}/${rpId}/rp-discovery-jwks_uri-keys`);
+    const issuer = await discover('rp-discovery-jwks_uri-keys');
     const jwks = await issuer.keystore();
 
     assert.equal(jwks.all().length, 4);

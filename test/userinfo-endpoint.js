@@ -16,14 +16,12 @@ const got = require('got');
 describe('UserInfo Endpoint', function () {
   describe('rp-userinfo-bearer-header', function () {
     forEach({
-      '@basic': ['code', ['authorization_code']],
-      '@implicit': ['id_token token', ['implicit']],
-      '@hybrid': ['code id_token', ['implicit', 'authorization_code']],
-    }, (setup, profile) => {
-      const [response_type, grant_types] = setup;
-
+      '@basic': 'code',
+      '@implicit': 'id_token token',
+      '@hybrid': 'code id_token',
+    }, (response_type, profile) => {
       it(profile, async function () {
-        const { client } = await register('rp-userinfo-bearer-header', { redirect_uris, grant_types, response_types: [response_type] });
+        const { client } = await register('rp-userinfo-bearer-header', { });
         const nonce = String(Math.random());
         const authorization = await got(client.authorizationUrl({ nonce, redirect_uri, response_type }), noFollow);
 
@@ -36,14 +34,12 @@ describe('UserInfo Endpoint', function () {
 
   describe('rp-userinfo-bearer-body', function () {
     forEach({
-      '@basic': ['code', ['authorization_code']],
-      '@implicit': ['id_token token', ['implicit']],
-      '@hybrid': ['code id_token', ['implicit', 'authorization_code']],
-    }, (setup, profile) => {
-      const [response_type, grant_types] = setup;
-
+      '@basic': 'code',
+      '@implicit': 'id_token token',
+      '@hybrid': 'code id_token',
+    }, (response_type, profile) => {
       it(profile, async function () {
-        const { client } = await register('rp-userinfo-bearer-body', { redirect_uris, grant_types, response_types: [response_type] });
+        const { client } = await register('rp-userinfo-bearer-body', { });
         const nonce = String(Math.random());
         const authorization = await got(client.authorizationUrl({ nonce, redirect_uri, response_type }), noFollow);
 
@@ -92,14 +88,12 @@ describe('UserInfo Endpoint', function () {
 
   describe('rp-userinfo-bad-sub-claim', function () {
     forEach({
-      '@basic': ['code', ['authorization_code']],
-      '@implicit': ['id_token token', ['implicit']],
-      '@hybrid': ['code id_token', ['implicit', 'authorization_code']],
-    }, (setup, profile) => {
-      const [response_type, grant_types] = setup;
-
+      '@basic': 'code',
+      '@implicit': 'id_token token',
+      '@hybrid': 'code id_token',
+    }, (response_type, profile) => {
       it(profile, async function () {
-        const { client } = await register('rp-userinfo-bad-sub-claim', { redirect_uris, grant_types, response_types: [response_type] });
+        const { client } = await register('rp-userinfo-bad-sub-claim', { });
         const nonce = String(Math.random());
         const authorization = await got(client.authorizationUrl({ nonce, redirect_uri, response_type }), noFollow);
 

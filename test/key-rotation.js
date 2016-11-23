@@ -1,12 +1,9 @@
 'use strict';
 
-const { Issuer } = require('openid-client');
 const {
+  register,
   noFollow,
   redirect_uri,
-  redirect_uris,
-  root,
-  rpId,
 } = require('./helper');
 
 const got = require('got');
@@ -16,8 +13,7 @@ afterEach(timekeeper.reset);
 
 describe('Key Rotation', function () {
   it('rp-key-rotation-op-sign-key @config,@dynamic', async function () {
-    const issuer = await Issuer.discover(`${root}/${rpId}/rp-key-rotation-op-sign-key`);
-    const client = await issuer.Client.register({ redirect_uris });
+    const { client } = await register('rp-key-rotation-op-sign-key', { });
     const authorization = await got(client.authorizationUrl({ redirect_uri }), noFollow);
     const params = client.callbackParams(authorization.headers.location);
     await client.authorizationCallback(redirect_uri, params);

@@ -4,7 +4,6 @@ const base64url = require('base64url');
 const {
   noFollow,
   redirect_uri,
-  redirect_uris,
   register,
 } = require('./helper');
 
@@ -13,7 +12,7 @@ const got = require('got');
 
 describe('claims Request Parameter', function () {
   it('rp-claims_request-id_token', async function () {
-    const { client } = await register('rp-claims_request-id_token', { redirect_uris });
+    const { client } = await register('rp-claims_request-id_token', { });
     const authorization = await got(client.authorizationUrl({ claims: { id_token: { name: null } }, redirect_uri, response_type: 'code' }), noFollow);
     const params = client.callbackParams(authorization.headers.location);
     const { id_token: idToken } = await client.authorizationCallback(redirect_uri, params);
@@ -21,7 +20,7 @@ describe('claims Request Parameter', function () {
   });
 
   it('rp-claims_request-userinfo', async function () {
-    const { client } = await register('rp-claims_request-userinfo', { redirect_uris });
+    const { client } = await register('rp-claims_request-userinfo', { });
     const authorization = await got(client.authorizationUrl({ claims: { userinfo: { name: null } }, redirect_uri, response_type: 'code' }), noFollow);
     const params = client.callbackParams(authorization.headers.location);
     const tokens = await client.authorizationCallback(redirect_uri, params);

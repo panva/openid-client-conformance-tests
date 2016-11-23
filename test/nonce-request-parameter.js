@@ -4,7 +4,6 @@ const { forEach } = require('lodash');
 const {
   noFollow,
   redirect_uri,
-  redirect_uris,
   register,
   reject,
 } = require('./helper');
@@ -15,13 +14,11 @@ const got = require('got');
 describe('nonce Request Parameter', function () {
   describe('rp-nonce-unless-code-flow', function () {
     forEach({
-      '@implicit': ['id_token', ['implicit']],
-      '@hybrid': ['code id_token', ['implicit', 'authorization_code']],
-    }, (setup, profile) => {
-      const [response_type, grant_types] = setup;
-
+      '@implicit': 'id_token',
+      '@hybrid': 'code id_token',
+    }, (response_type, profile) => {
       it(profile, async function () {
-        const { client } = await register('rp-nonce-unless-code-flow', { redirect_uris, grant_types, response_types: [response_type] });
+        const { client } = await register('rp-nonce-unless-code-flow', { });
         const nonce = String(Math.random());
         try {
           client.authorizationUrl({ redirect_uri, response_type });
@@ -40,13 +37,11 @@ describe('nonce Request Parameter', function () {
 
   describe('rp-nonce-invalid', function () {
     forEach({
-      '@implicit': ['id_token', ['implicit']],
-      '@hybrid': ['code id_token', ['implicit', 'authorization_code']],
-    }, (setup, profile) => {
-      const [response_type, grant_types] = setup;
-
+      '@implicit': 'id_token',
+      '@hybrid': 'code id_token',
+    }, (response_type, profile) => {
       it(profile, async function () {
-        const { client } = await register('rp-nonce-invalid', { redirect_uris, grant_types, response_types: [response_type] });
+        const { client } = await register('rp-nonce-invalid', { });
         const nonce = String(Math.random());
         const authorization = await got(client.authorizationUrl({ redirect_uri, response_type, nonce }), noFollow);
 
