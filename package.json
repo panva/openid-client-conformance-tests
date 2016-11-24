@@ -4,6 +4,7 @@
   "description": "node's openid-client library conformance tests",
   "scripts": {
     "test": "mocha",
+    "all": "mocha",
     "basic": "mocha -f @basic",
     "implicit": "mocha -f @implicit",
     "hybrid": "mocha -f @hybrid",

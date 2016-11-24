@@ -11,11 +11,9 @@ revision: November 2016
 ```
 $ nvm use 7
 Now using node v7.x.x (npm v3.x.x)
-$ node -v
-v7.x.x
 $ npm install
 ...
-$ npm run "basic" # or "implicit", "hybrid", "config", "dynamic"
+$ npm run "basic" # or "implicit", "hybrid", "config", "dynamic" or "all"
 ...
 ```
 
