@@ -5,6 +5,7 @@
 process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
 
 const { Issuer } = require('openid-client');
+const zlib = require('zlib');
 const got = require('got');
 const fs = require('fs');
 
@@ -38,13 +39,19 @@ if (profile) {
   after(function () {
     return got(`${root}/log/${rpId}`).then((logIndex) => {
       if (/Download tar file/.exec(logIndex.body)) {
-        console.log('Downloading logs');
-        const filename = `${profile}-${rpId}.tar`;
-        return got(`${root}/mktar/${rpId}`)
-          .then(tar => fs.writeFileSync(filename, tar.body))
-          .then(() => {
-            console.log('Downloading logs - DONE -', filename);
-          });
+        return new Promise((resolve, reject) => {
+          console.log('Downloading logs');
+          const filename = `${profile}-${rpId}.tgz`;
+          const out = fs.createWriteStream(filename);
+          got.stream(`${root}/mktar/${rpId}`)
+            .pipe(zlib.createGunzip())
+            .pipe(out)
+            .on('close', () => {
+              console.log('Downloading logs - DONE -', filename);
+              resolve();
+            })
+            .on('error', reject);
+        });
       }
       return Promise.resolve();
     });
