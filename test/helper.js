@@ -6,14 +6,16 @@ process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
 
 const { Issuer } = require('openid-client');
 const zlib = require('zlib');
+const path = require('path');
+const fse = require('fs-extra');
+const tar = require('tar');
 const got = require('got');
-const fs = require('fs');
 
 const rpId = 'node-openid-client';
 const root = 'https://rp.certification.openid.net:8080';
 const redirectUri = `https://${rpId}.dev/cb`;
 
-const profile = (() => {
+const grep = (() => {
   const last = process.argv[process.argv.length - 1];
   if (last.startsWith('@')) {
     return last.slice(1);
@@ -35,20 +37,29 @@ before(function () {
 
 Issuer.defaultHttpOptions = { timeout: 2500 };
 
-if (profile) {
+if (grep) {
+  const [responseType, profile] = grep.split('-');
   after(function () {
     return got(`${root}/log/${rpId}`).then((logIndex) => {
       if (/Download tar file/.exec(logIndex.body)) {
         return new Promise((resolve, reject) => {
           console.log('Downloading logs');
-          const filename = `${profile}-${rpId}.tgz`;
-          const out = fs.createWriteStream(filename);
+          const profileFolder = path.resolve('logs', profile);
           got.stream(`${root}/mktar/${rpId}`)
             .pipe(zlib.createGunzip())
-            .pipe(out)
+            .pipe(tar.Extract({
+              path: profileFolder,
+            }))
             .on('close', () => {
-              console.log('Downloading logs - DONE -', filename);
-              resolve();
+              fse.move(`${profileFolder}/${rpId}`, `${profileFolder}/${responseType}`, {
+                clobber: true,
+              }, (err) => {
+                if (err) {
+                  reject();
+                } else {
+                  resolve();
+                }
+              });
             })
             .on('error', reject);
         });

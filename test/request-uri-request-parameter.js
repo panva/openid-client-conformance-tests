@@ -7,7 +7,7 @@ describe('request_uri Request Parameter', function () {
 
   it('rp-request_uri-sig+enc');
 
-  it('rp-request_uri-unsigned'); // @dynamic optional
+  it('rp-request_uri-unsigned'); // @code-dynamic optional
 
-  it('rp-request_uri-sig'); // @dynamic optional
+  it('rp-request_uri-sig'); // @code-dynamic optional
 });

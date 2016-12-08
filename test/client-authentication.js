@@ -14,8 +14,11 @@ const got = require('got');
 describe('Client Authentication', function () {
   describe('rp-token_endpoint-client_secret_basic', function () {
     forEach({
-      '@basic': 'code',
-      '@hybrid': 'code id_token',
+      '@code-basic': 'code',
+      '@id_token+token-implicit': 'id_token token',
+      '@code+id_token-hybrid': 'code id_token',
+      '@code+token-hybrid': 'code token',
+      '@code+id_token+token-hybrid': 'code id_token token',
     }, (response_type, profile) => {
       it(profile, async function () {
         const { client } = await register('rp-token_endpoint-client_secret_basic', { token_endpoint_auth_method: 'client_secret_basic' });

@@ -6,13 +6,14 @@ const {
   redirect_uri,
 } = require('./helper');
 
+const assert = require('assert');
 const got = require('got');
 const timekeeper = require('timekeeper');
 
 afterEach(timekeeper.reset);
 
 describe('Key Rotation', function () {
-  it('rp-key-rotation-op-sign-key @config,@dynamic', async function () {
+  it('rp-key-rotation-op-sign-key @code-config,@code-dynamic', async function () {
     const { client } = await register('rp-key-rotation-op-sign-key', { });
     const authorization = await got(client.authorizationUrl({ redirect_uri }), noFollow);
     const params = client.callbackParams(authorization.headers.location);
@@ -22,7 +23,8 @@ describe('Key Rotation', function () {
 
     const secondAuthorization = await got(client.authorizationUrl({ redirect_uri }), noFollow);
     const secondParams = client.callbackParams(secondAuthorization.headers.location);
-    await client.authorizationCallback(redirect_uri, secondParams);
+    const tokens = await client.authorizationCallback(redirect_uri, secondParams);
+    assert(tokens);
   });
 
   it('rp-key-rotation-op-enc-key');

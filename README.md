@@ -6,14 +6,14 @@ Hybrid RP, Dynamic RP and Config RP profiles.
 Executes tests with expectations defined in [RP test tool][test-list] and downloads the log archive
 for each of the tested profiles.
 
-revision: November 2016
+revision: December 2016
 
 ```
 $ nvm use 7
 Now using node v7.x.x (npm v3.x.x)
 $ npm install
 ...
-$ npm run "basic" # or "implicit", "hybrid", "config", "dynamic" or "all"
+$ npm run "basic" # or "id_token-implicit", "id_token+token-implicit", "code+id_token-hybrid", "code+token-hybrid", "code+id_token+token-hybrid", "config", "dynamic" or "non-profile"
 ...
 ```
 

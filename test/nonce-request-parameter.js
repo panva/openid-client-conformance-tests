@@ -14,8 +14,11 @@ const got = require('got');
 describe('nonce Request Parameter', function () {
   describe('rp-nonce-unless-code-flow', function () {
     forEach({
-      '@implicit': 'id_token',
-      '@hybrid': 'code id_token',
+      '@id_token-implicit': 'id_token',
+      '@id_token+token-implicit': 'id_token token',
+      '@code+id_token-hybrid': 'code id_token',
+      '@code+token-hybrid': 'code token',
+      '@code+id_token+token-hybrid': 'code id_token token',
     }, (response_type, profile) => {
       it(profile, async function () {
         const { client } = await register('rp-nonce-unless-code-flow', { });
@@ -37,8 +40,12 @@ describe('nonce Request Parameter', function () {
 
   describe('rp-nonce-invalid', function () {
     forEach({
-      '@implicit': 'id_token',
-      '@hybrid': 'code id_token',
+      '@code-basic': 'code',
+      '@id_token-implicit': 'id_token',
+      '@id_token+token-implicit': 'id_token token',
+      '@code+id_token-hybrid': 'code id_token',
+      '@code+token-hybrid': 'code token',
+      '@code+id_token+token-hybrid': 'code id_token token',
     }, (response_type, profile) => {
       it(profile, async function () {
         const { client } = await register('rp-nonce-invalid', { });

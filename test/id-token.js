@@ -15,9 +15,12 @@ const got = require('got');
 describe('ID Token', function () {
   describe('rp-id_token-bad-sig-rs256', function () {
     forEach({
-      '@basic': 'code',
-      '@implicit': 'id_token',
-      '@hybrid': 'code id_token',
+      '@code-basic': 'code',
+      '@id_token-implicit': 'id_token',
+      '@id_token+token-implicit': 'id_token token',
+      '@code+id_token-hybrid': 'code id_token',
+      '@code+token-hybrid': 'code token',
+      '@code+id_token+token-hybrid': 'code id_token token',
     }, (response_type, profile) => {
       it(profile, async function () {
         const { client } = await register('rp-id_token-bad-sig-rs256', { id_token_signed_response_alg: 'RS256' });
@@ -59,16 +62,30 @@ describe('ID Token', function () {
     const authorization = await got(client.authorizationUrl({ redirect_uri, response_type: 'code' }), noFollow);
 
     const params = client.callbackParams(authorization.headers.location);
-    await client.authorizationCallback(redirect_uri, params);
+    const tokens = await client.authorizationCallback(redirect_uri, params);
+    assert(tokens);
   });
 
-  it('rp-id_token-sig-rs256', async function () {
-    const { client } = await register('rp-id_token-sig-rs256', { id_token_signed_response_alg: 'RS256' });
-    assert.equal(client.id_token_signed_response_alg, 'RS256');
-    const authorization = await got(client.authorizationUrl({ redirect_uri, response_type: 'code' }), noFollow);
+  describe('rp-id_token-sig-rs256', function () {
+    forEach({
+      '@code-basic': 'code',
+      '@id_token-implicit': 'id_token',
+      '@id_token+token-implicit': 'id_token token',
+      '@code+id_token-hybrid': 'code id_token',
+      '@code+token-hybrid': 'code token',
+      '@code+id_token+token-hybrid': 'code id_token token',
+    }, (response_type, profile) => {
+      it(profile, async function () {
+        const { client } = await register('rp-id_token-sig-rs256', { id_token_signed_response_alg: 'RS256' });
+        assert.equal(client.id_token_signed_response_alg, 'RS256');
+        const nonce = String(Math.random());
+        const authorization = await got(client.authorizationUrl({ redirect_uri, nonce, response_type }), noFollow);
 
-    const params = client.callbackParams(authorization.headers.location);
-    await client.authorizationCallback(redirect_uri, params);
+        const params = client.callbackParams(authorization.headers.location.replace('#', '?'));
+        const tokens = await client.authorizationCallback(redirect_uri, params, { nonce });
+        assert(tokens);
+      });
+    });
   });
 
   it('rp-id_token-sig-hs256', async function () {
@@ -77,7 +94,8 @@ describe('ID Token', function () {
     const authorization = await got(client.authorizationUrl({ redirect_uri, response_type: 'code' }), noFollow);
 
     const params = client.callbackParams(authorization.headers.location);
-    await client.authorizationCallback(redirect_uri, params);
+    const tokens = await client.authorizationCallback(redirect_uri, params);
+    assert(tokens);
   });
 
   it('rp-id_token-sig-es256', async function () {
@@ -86,10 +104,11 @@ describe('ID Token', function () {
     const authorization = await got(client.authorizationUrl({ redirect_uri, response_type: 'code' }), noFollow);
 
     const params = client.callbackParams(authorization.headers.location);
-    await client.authorizationCallback(redirect_uri, params);
+    const tokens = await client.authorizationCallback(redirect_uri, params);
+    assert(tokens);
   });
 
-  it('rp-id_token-sig-none @basic,@config,@dynamic', async function () {
+  it('rp-id_token-sig-none @code-basic,@code-config,@code-dynamic', async function () {
     const { client } = await register('rp-id_token-sig-none', { id_token_signed_response_alg: 'none' });
     assert.equal(client.id_token_signed_response_alg, 'none');
     const authorization = await got(client.authorizationUrl({ redirect_uri }), noFollow);
@@ -99,24 +118,34 @@ describe('ID Token', function () {
     assert(tokens.id_token);
   });
 
-  it('rp-id_token-bad-c_hash @hybrid', async function () {
-    const { client } = await register('rp-id_token-bad-c_hash', { });
-    const nonce = String(Math.random());
-    const authorization = await got(client.authorizationUrl({ redirect_uri, nonce, response_type: 'code id_token' }), noFollow);
+  describe('rp-id_token-bad-c_hash', function () {
+    forEach({
+      '@code+id_token-hybrid': 'code id_token',
+      '@code+token-hybrid': 'code token',
+      '@code+id_token+token-hybrid': 'code id_token token',
+    }, (response_type, profile) => {
+      it(profile, async function () {
+        const { client } = await register('rp-id_token-bad-c_hash', { });
+        const nonce = String(Math.random());
+        const authorization = await got(client.authorizationUrl({ redirect_uri, nonce, response_type }), noFollow);
 
-    const params = client.callbackParams(authorization.headers.location.replace('#', '?'));
-    try {
-      await client.authorizationCallback(redirect_uri, params, { nonce });
-      reject();
-    } catch (err) {
-      assert.equal(err.message, 'c_hash mismatch');
-    }
+        const params = client.callbackParams(authorization.headers.location.replace('#', '?'));
+        try {
+          await client.authorizationCallback(redirect_uri, params, { nonce });
+          reject();
+        } catch (err) {
+          assert.equal(err.message, 'c_hash mismatch');
+        }
+      });
+    });
   });
 
   describe('rp-id_token-bad-at_hash', function () {
     forEach({
-      '@implicit': 'id_token token',
-      '@hybrid': 'code id_token token',
+      '@id_token+token-implicit': 'id_token token',
+      '@code+id_token-hybrid': 'code id_token',
+      '@code+token-hybrid': 'code token',
+      '@code+id_token+token-hybrid': 'code id_token token',
     }, (response_type, profile) => {
       it(profile, async function () {
         const { client } = await register('rp-id_token-bad-at_hash', { });
@@ -136,9 +165,12 @@ describe('ID Token', function () {
 
   describe('rp-id_token-issuer-mismatch', function () {
     forEach({
-      '@basic': 'code',
-      '@implicit': 'id_token',
-      '@hybrid': 'code id_token',
+      '@code-basic': 'code',
+      '@id_token-implicit': 'id_token',
+      '@id_token+token-implicit': 'id_token token',
+      '@code+id_token-hybrid': 'code id_token',
+      '@code+token-hybrid': 'code token',
+      '@code+id_token+token-hybrid': 'code id_token token',
     }, (response_type, profile) => {
       it(profile, async function () {
         const { client } = await register('rp-id_token-issuer-mismatch', { });
@@ -158,9 +190,12 @@ describe('ID Token', function () {
 
   describe('rp-id_token-iat', function () {
     forEach({
-      '@basic': 'code',
-      '@implicit': 'id_token',
-      '@hybrid': 'code id_token',
+      '@code-basic': 'code',
+      '@id_token-implicit': 'id_token',
+      '@id_token+token-implicit': 'id_token token',
+      '@code+id_token-hybrid': 'code id_token',
+      '@code+token-hybrid': 'code token',
+      '@code+id_token+token-hybrid': 'code id_token token',
     }, (response_type, profile) => {
       it(profile, async function () {
         const { client } = await register('rp-id_token-iat', { });
@@ -195,9 +230,12 @@ describe('ID Token', function () {
 
   describe('rp-id_token-aud', function () {
     forEach({
-      '@basic': 'code',
-      '@implicit': 'id_token',
-      '@hybrid': 'code id_token',
+      '@code-basic': 'code',
+      '@id_token-implicit': 'id_token',
+      '@id_token+token-implicit': 'id_token token',
+      '@code+id_token-hybrid': 'code id_token',
+      '@code+token-hybrid': 'code token',
+      '@code+id_token+token-hybrid': 'code id_token token',
     }, (response_type, profile) => {
       it(profile, async function () {
         const { client } = await register('rp-id_token-aud', { });
@@ -217,9 +255,12 @@ describe('ID Token', function () {
 
   describe('rp-id_token-sub', function () {
     forEach({
-      '@basic': 'code',
-      '@implicit': 'id_token',
-      '@hybrid': 'code id_token',
+      '@code-basic': 'code',
+      '@id_token-implicit': 'id_token',
+      '@id_token+token-implicit': 'id_token token',
+      '@code+id_token-hybrid': 'code id_token',
+      '@code+token-hybrid': 'code token',
+      '@code+id_token+token-hybrid': 'code id_token token',
     }, (response_type, profile) => {
       it(profile, async function () {
         const { client } = await register('rp-id_token-sub', { });
@@ -239,9 +280,12 @@ describe('ID Token', function () {
 
   describe('rp-id_token-kid-absent-single-jwks', function () {
     forEach({
-      '@basic': 'code',
-      '@implicit': 'id_token',
-      '@hybrid': 'code id_token',
+      '@code-basic': 'code',
+      '@id_token-implicit': 'id_token',
+      '@id_token+token-implicit': 'id_token token',
+      '@code+id_token-hybrid': 'code id_token',
+      '@code+token-hybrid': 'code token',
+      '@code+id_token+token-hybrid': 'code id_token token',
     }, (response_type, profile) => {
       it(profile, async function () {
         const { client } = await register('rp-id_token-kid-absent-single-jwks', { });
@@ -249,16 +293,20 @@ describe('ID Token', function () {
         const authorization = await got(client.authorizationUrl({ redirect_uri, nonce, response_type }), noFollow);
 
         const params = client.callbackParams(authorization.headers.location.replace('#', '?'));
-        await client.authorizationCallback(redirect_uri, params, { nonce });
+        const tokens = await client.authorizationCallback(redirect_uri, params, { nonce });
+        assert(tokens);
       });
     });
   });
 
   describe('rp-id_token-kid-absent-multiple-jwks', function () {
     forEach({
-      '@basic': 'code',
-      '@implicit': 'id_token',
-      '@hybrid': 'code id_token',
+      '@code-basic': 'code',
+      '@id_token-implicit': 'id_token',
+      '@id_token+token-implicit': 'id_token token',
+      '@code+id_token-hybrid': 'code id_token',
+      '@code+token-hybrid': 'code token',
+      '@code+id_token+token-hybrid': 'code id_token token',
     }, (response_type, profile) => {
       it(profile, async function () {
         const { client } = await register('rp-id_token-kid-absent-multiple-jwks', { });

@@ -19,21 +19,21 @@ afterEach(nock.cleanAll);
 afterEach(() => nock.enableNetConnect());
 
 describe('Discovery', function () {
-  it('rp-discovery-webfinger-url @dynamic', async function () {
+  it('rp-discovery-webfinger-url @code-dynamic', async function () {
     const testId = 'rp-discovery-webfinger-url';
 
     const issuer = await Issuer.webfinger(`${root}/${rpId}/${testId}/joe`);
     assert.equal(issuer.issuer, `${root}/${rpId}/${testId}`);
   });
 
-  it('rp-discovery-webfinger-acct @dynamic', async function () {
+  it('rp-discovery-webfinger-acct @code-dynamic', async function () {
     const testId = 'rp-discovery-webfinger-acct';
 
     const issuer = await Issuer.webfinger(`acct:${rpId}.${testId}@rp.certification.openid.net:8080`);
     assert.equal(issuer.issuer, `${root}/${rpId}/${testId}`);
   });
 
-  it('rp-discovery-issuer-not-matching-config @config,@dynamic', async function () {
+  it('rp-discovery-issuer-not-matching-config @code-config,@code-dynamic', async function () {
     try {
       await Issuer.webfinger(`${root}/${rpId}/rp-discovery-issuer-not-matching-config`);
       reject();
@@ -42,7 +42,7 @@ describe('Discovery', function () {
     }
   });
 
-  it('rp-discovery-openid-configuration @config,@dynamic', async function () {
+  it('rp-discovery-openid-configuration @code-config,@code-dynamic', async function () {
     const testId = 'rp-discovery-openid-configuration';
     const response = await got(`${root}/${rpId}/${testId}/.well-known/openid-configuration`, noFollow);
     const discovery = JSON.parse(response.body);
@@ -59,7 +59,7 @@ describe('Discovery', function () {
     }
   });
 
-  it('rp-discovery-jwks_uri-keys @config,@dynamic', async function () {
+  it('rp-discovery-jwks_uri-keys @code-config,@code-dynamic', async function () {
     const issuer = await discover('rp-discovery-jwks_uri-keys');
     const jwks = await issuer.keystore();
 

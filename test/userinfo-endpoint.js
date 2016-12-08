@@ -16,9 +16,11 @@ const got = require('got');
 describe('UserInfo Endpoint', function () {
   describe('rp-userinfo-bearer-header', function () {
     forEach({
-      '@basic': 'code',
-      '@implicit': 'id_token token',
-      '@hybrid': 'code id_token',
+      '@code-basic': 'code',
+      '@id_token+token-implicit': 'id_token token',
+      '@code+id_token-hybrid': 'code id_token',
+      '@code+token-hybrid': 'code token',
+      '@code+id_token+token-hybrid': 'code id_token token',
     }, (response_type, profile) => {
       it(profile, async function () {
         const { client } = await register('rp-userinfo-bearer-header', { });
@@ -27,16 +29,19 @@ describe('UserInfo Endpoint', function () {
 
         const params = client.callbackParams(authorization.headers.location.replace('#', '?'));
         const tokens = await client.authorizationCallback(redirect_uri, params, { nonce });
-        await client.userinfo(tokens, { via: 'header' });
+        const userinfo = await client.userinfo(tokens, { via: 'header' });
+        assert(userinfo);
       });
     });
   });
 
   describe('rp-userinfo-bearer-body', function () {
     forEach({
-      '@basic': 'code',
-      '@implicit': 'id_token token',
-      '@hybrid': 'code id_token',
+      '@code-basic': 'code',
+      '@id_token+token-implicit': 'id_token token',
+      '@code+id_token-hybrid': 'code id_token',
+      '@code+token-hybrid': 'code token',
+      '@code+id_token+token-hybrid': 'code id_token token',
     }, (response_type, profile) => {
       it(profile, async function () {
         const { client } = await register('rp-userinfo-bearer-body', { });
@@ -45,17 +50,19 @@ describe('UserInfo Endpoint', function () {
 
         const params = client.callbackParams(authorization.headers.location.replace('#', '?'));
         const tokens = await client.authorizationCallback(redirect_uri, params, { nonce });
-        await client.userinfo(tokens, { via: 'body', verb: 'post' });
+        const userinfo = await client.userinfo(tokens, { via: 'body', verb: 'post' });
+        assert(userinfo);
       });
     });
   });
 
-  it('rp-userinfo-sig @config,@dynamic', async function () {
+  it('rp-userinfo-sig @code-config,@code-dynamic', async function () {
     const { client } = await register('rp-userinfo-sig', { redirect_uris, userinfo_signed_response_alg: 'HS256' });
     const authorization = await got(client.authorizationUrl({ redirect_uri, response_type: 'code' }), noFollow);
     const params = client.callbackParams(authorization.headers.location);
     const tokens = await client.authorizationCallback(redirect_uri, params);
-    await client.userinfo(tokens);
+    const userinfo = await client.userinfo(tokens);
+    assert(userinfo);
   });
 
   it('rp-userinfo-sig+enc', async function () {
@@ -88,9 +95,11 @@ describe('UserInfo Endpoint', function () {
 
   describe('rp-userinfo-bad-sub-claim', function () {
     forEach({
-      '@basic': 'code',
-      '@implicit': 'id_token token',
-      '@hybrid': 'code id_token',
+      '@code-basic': 'code',
+      '@id_token+token-implicit': 'id_token token',
+      '@code+id_token-hybrid': 'code id_token',
+      '@code+token-hybrid': 'code token',
+      '@code+id_token+token-hybrid': 'code id_token token',
     }, (response_type, profile) => {
       it(profile, async function () {
         const { client } = await register('rp-userinfo-bad-sub-claim', { });
