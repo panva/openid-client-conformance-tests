@@ -121,7 +121,6 @@ describe('ID Token', function () {
   describe('rp-id_token-bad-c_hash', function () {
     forEach({
       '@code+id_token-hybrid': 'code id_token',
-      '@code+token-hybrid': 'code token',
       '@code+id_token+token-hybrid': 'code id_token token',
     }, (response_type, profile) => {
       it(profile, async function () {
@@ -142,6 +141,7 @@ describe('ID Token', function () {
 
   describe('rp-id_token-bad-at_hash', function () {
     forEach({
+      '@code-basic': 'code',
       '@id_token+token-implicit': 'id_token token',
       '@code+id_token-hybrid': 'code id_token',
       '@code+token-hybrid': 'code token',

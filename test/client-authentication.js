@@ -15,7 +15,6 @@ describe('Client Authentication', function () {
   describe('rp-token_endpoint-client_secret_basic', function () {
     forEach({
       '@code-basic': 'code',
-      '@id_token+token-implicit': 'id_token token',
       '@code+id_token-hybrid': 'code id_token',
       '@code+token-hybrid': 'code token',
       '@code+id_token+token-hybrid': 'code id_token token',
