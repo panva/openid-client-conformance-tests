@@ -3,14 +3,13 @@
   "version": "1.0.0",
   "description": "node's openid-client library conformance tests",
   "scripts": {
+    "test": "mocha",
     "non-profile": "mocha --fgrep @ --invert",
     "basic": "mocha --fgrep @code-basic",
     "config": "mocha --fgrep @code-config",
     "dynamic": "mocha --fgrep @code-dynamic",
-
     "id_token-implicit": "mocha --fgrep @id_token-implicit",
     "id_token+token-implicit": "mocha --fgrep @id_token+token-implicit",
-
     "code+id_token-hybrid": "mocha --fgrep @code+id_token-hybrid",
     "code+token-hybrid": "mocha --fgrep @code+token-hybrid",
     "code+id_token+token-hybrid": "mocha --fgrep @code+id_token+token-hybrid"
@@ -33,7 +32,8 @@
     "mocha": "^3.1.2",
     "nock": "^9.0.2",
     "node-jose": "^0.9.1",
-    "openid-client": "^1.1.0",
+    "openid-client": "^1.3.0",
+    "quick-gist": "^1.4.0",
     "tar": "^2.2.1",
     "timekeeper": "^1.0.0"
   }

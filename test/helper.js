@@ -10,6 +10,7 @@ const path = require('path');
 const fse = require('fs-extra');
 const tar = require('tar');
 const got = require('got');
+const quickGist = require('quick-gist');
 
 const rpId = 'node-openid-client';
 const root = 'https://rp.certification.openid.net:8080';
@@ -89,4 +90,15 @@ module.exports = {
     return { issuer, client };
   },
   reject() { throw new Error('expected a rejection'); },
+  gist(content) {
+    return new Promise((resolve, reject) => {
+      quickGist({
+        content,
+        fileExtension: 'jwt',
+      }, (err, response, { files: { 'gist1.jwt': { raw_url } } }) => {
+        if (err) return reject(err);
+        return resolve(raw_url);
+      });
+    });
+  },
 };
