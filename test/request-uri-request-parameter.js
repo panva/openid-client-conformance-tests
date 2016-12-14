@@ -22,7 +22,7 @@ describe('request_uri Request Parameter', function () {
       request_object_encryption_enc: 'A128CBC-HS256',
     }, keystore);
 
-    const requestObject = await client.requestObject();
+    const requestObject = await client.requestObject({});
 
     const request_uri = await gist(requestObject);
     assert.equal(client.request_object_signing_alg, 'none');
@@ -44,7 +44,7 @@ describe('request_uri Request Parameter', function () {
       request_object_encryption_enc: 'A128CBC-HS256',
     }, keystore);
 
-    const requestObject = await client.requestObject();
+    const requestObject = await client.requestObject({});
 
     const request_uri = await gist(requestObject);
     assert.equal(client.request_object_signing_alg, 'RS256');
@@ -58,7 +58,7 @@ describe('request_uri Request Parameter', function () {
 
   it('rp-request_uri-unsigned @code-dynamic', async function () {
     const { client } = await register('rp-request_uri-unsigned', { request_object_signing_alg: 'none' });
-    const requestObject = await client.requestObject();
+    const requestObject = await client.requestObject({});
     const request_uri = await gist(requestObject);
     assert.equal(client.request_object_signing_alg, 'none');
     const authorization = await got(client.authorizationUrl({ redirect_uri, request_uri }), noFollow);
@@ -74,7 +74,7 @@ describe('request_uri Request Parameter', function () {
     });
 
     const { client } = await register('rp-request_uri-sig', { request_object_signing_alg: 'RS256' }, keystore);
-    const requestObject = await client.requestObject();
+    const requestObject = await client.requestObject({});
     const request_uri = await gist(requestObject);
     assert.equal(client.request_object_signing_alg, 'RS256');
     const authorization = await got(client.authorizationUrl({ redirect_uri, request_uri }), noFollow);

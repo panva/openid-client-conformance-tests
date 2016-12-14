@@ -12,17 +12,21 @@ const tar = require('tar');
 const got = require('got');
 const quickGist = require('quick-gist');
 
-const rpId = 'node-openid-client';
+let rpId = 'node-openid-client';
 const root = 'https://rp.certification.openid.net:8080';
 const redirectUri = `https://${rpId}.dev/cb`;
 
-const grep = (() => {
+const [responseType, profile] = (() => {
   const last = process.argv[process.argv.length - 1];
   if (last.startsWith('@')) {
-    return last.slice(1);
+    return last.slice(1).split('-');
   }
-  return undefined;
+  return [];
 })();
+
+if (responseType && profile) {
+  rpId = `${rpId}-${profile}-${responseType}`;
+}
 
 before(function () {
   return got(`${root}/log/${rpId}`).then((logIndex) => {
@@ -38,11 +42,10 @@ before(function () {
 
 Issuer.defaultHttpOptions = { timeout: 2500 };
 
-if (grep) {
-  const [responseType, profile] = grep.split('-');
+if (profile) {
   after(function () {
     return got(`${root}/log/${rpId}`).then((logIndex) => {
-      if (/Download tar file/.exec(logIndex.body)) {
+      if (/Download gzipped tar file/.exec(logIndex.body)) {
         return new Promise((resolve, reject) => {
           console.log('Downloading logs');
           const profileFolder = path.resolve('logs', profile);
