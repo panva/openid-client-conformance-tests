@@ -2,6 +2,8 @@
 
 const {
   register,
+  describe,
+  it,
 } = require('./helper');
 
 const assert = require('assert');

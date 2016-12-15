@@ -6,10 +6,13 @@ const {
   redirect_uri,
   register,
   reject,
+  describe,
+  authorize,
+  authorizationCallback,
+  it,
 } = require('./helper');
 
 const assert = require('assert');
-const got = require('got');
 
 describe('nonce Request Parameter', function () {
   describe('rp-nonce-unless-code-flow', function () {
@@ -29,10 +32,10 @@ describe('nonce Request Parameter', function () {
         } catch (err) {
           assert.equal(err.message, 'nonce MUST be provided for implicit and hybrid flows');
         }
-        const authorization = await got(client.authorizationUrl({ nonce, redirect_uri, response_type }), noFollow);
+        const authorization = await authorize(client.authorizationUrl({ nonce, redirect_uri, response_type }), noFollow);
 
         const params = client.callbackParams(authorization.headers.location.replace('#', '?'));
-        const tokens = await client.authorizationCallback(redirect_uri, params, { nonce });
+        const tokens = await authorizationCallback(client, redirect_uri, params, { nonce });
         assert(tokens);
       });
     });
@@ -50,11 +53,11 @@ describe('nonce Request Parameter', function () {
       it(profile, async function () {
         const { client } = await register('rp-nonce-invalid', { });
         const nonce = String(Math.random());
-        const authorization = await got(client.authorizationUrl({ redirect_uri, response_type, nonce }), noFollow);
+        const authorization = await authorize(client.authorizationUrl({ redirect_uri, response_type, nonce }), noFollow);
 
         const params = client.callbackParams(authorization.headers.location.replace('#', '?'));
         try {
-          await client.authorizationCallback(redirect_uri, params, { nonce });
+          await authorizationCallback(client, redirect_uri, params, { nonce });
           reject();
         } catch (err) {
           assert.equal(err.message, 'nonce mismatch');

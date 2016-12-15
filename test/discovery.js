@@ -9,6 +9,8 @@ const {
   reject,
   root,
   rpId,
+  describe,
+  it,
 } = require('./helper');
 
 const assert = require('assert');
@@ -21,23 +23,28 @@ afterEach(() => nock.enableNetConnect());
 describe('Discovery', function () {
   it('rp-discovery-webfinger-url @code-dynamic', async function () {
     const testId = 'rp-discovery-webfinger-url';
-
-    const issuer = await Issuer.webfinger(`${root}/${rpId}/${testId}/joe`);
+    const input = `${root}/${rpId}/${testId}/joe`;
+    const issuer = await Issuer.webfinger(input);
+    log('webfinger using', input, 'discovered', issuer.issuer);
     assert.equal(issuer.issuer, `${root}/${rpId}/${testId}`);
   });
 
   it('rp-discovery-webfinger-acct @code-dynamic', async function () {
     const testId = 'rp-discovery-webfinger-acct';
-
-    const issuer = await Issuer.webfinger(`acct:${rpId}.${testId}@rp.certification.openid.net:8080`);
+    const input = `acct:${rpId}.${testId}@rp.certification.openid.net:8080`;
+    const issuer = await Issuer.webfinger(input);
+    log('webfinger using', input, 'discovered', issuer.issuer);
     assert.equal(issuer.issuer, `${root}/${rpId}/${testId}`);
   });
 
   it('rp-discovery-issuer-not-matching-config @code-config,@code-dynamic', async function () {
     try {
-      await Issuer.webfinger(`${root}/${rpId}/rp-discovery-issuer-not-matching-config`);
+      const input = `${root}/${rpId}/rp-discovery-issuer-not-matching-config`;
+      log('webfinger discovery', input);
+      await Issuer.webfinger(input);
       reject();
     } catch (err) {
+      log('caught', err);
       assert.equal(err.message, 'discovered issuer mismatch');
     }
   });
@@ -54,6 +61,7 @@ describe('Discovery', function () {
 
     for (const property in discovery) {
       if (issuer.metadata[property]) {
+        log('expecting property', property, 'of value', issuer.metadata[property], 'got', discovery[property]);
         assert.deepEqual(discovery[property], issuer.metadata[property]);
       }
     }
@@ -64,5 +72,6 @@ describe('Discovery', function () {
     const jwks = await issuer.keystore();
 
     assert.equal(jwks.all().length, 4);
+    log('fetched jwks_uri', JSON.stringify(jwks.toJSON(), null, 4));
   });
 });

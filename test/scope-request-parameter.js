@@ -6,10 +6,13 @@ const {
   noFollow,
   redirect_uri,
   register,
+  describe,
+  authorize,
+  authorizationCallback,
+  it,
 } = require('./helper');
 
 const assert = require('assert');
-const got = require('got');
 
 describe('scope Request Parameter', function () {
   describe('rp-scope-userinfo-claims', function () {
@@ -24,10 +27,10 @@ describe('scope Request Parameter', function () {
       it(profile, async function () {
         const { client } = await register('rp-scope-userinfo-claims', { });
         const nonce = String(Math.random());
-        const authorization = await got(client.authorizationUrl({ nonce, redirect_uri, response_type, scope: 'openid email' }), noFollow);
+        const authorization = await authorize(client.authorizationUrl({ nonce, redirect_uri, response_type, scope: 'openid email' }), noFollow);
 
         const params = client.callbackParams(authorization.headers.location.replace('#', '?'));
-        const tokens = await client.authorizationCallback(redirect_uri, params, { nonce });
+        const tokens = await authorizationCallback(client, redirect_uri, params, { nonce });
 
         const userinfo = await (async () => {
           if (tokens.access_token) {
