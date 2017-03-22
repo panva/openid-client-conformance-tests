@@ -1,5 +1,11 @@
 {
   "extends": "airbnb-base",
+  "env": {
+    "mocha": true,
+  },
+  "globals": {
+    "log": true,
+  },
   "rules": {
     "no-empty": ["error", { "allowEmptyCatch": true }],
     "no-param-reassign": ["error", { "props": false }],

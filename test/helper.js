@@ -2,8 +2,6 @@
 
 /* eslint-disable no-console */
 
-process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
-
 const { Issuer } = require('openid-client');
 const zlib = require('zlib');
 const path = require('path');
@@ -12,9 +10,9 @@ const fs = require('fs');
 const tar = require('tar');
 const got = require('got');
 const url = require('url');
-const quickGist = require('quick-gist');
 
 let rpId = 'node-openid-client';
+const echo = 'https://limitless-retreat-96294.herokuapp.com';
 const root = 'https://rp.certification.openid.net:8080';
 const redirectUri = `https://${rpId}.dev/cb`;
 
@@ -169,20 +167,18 @@ module.exports = {
       grant_types: responseType && responseType.indexOf('token') === -1 ? ['authorization_code'] : ['implicit', 'authorization_code'],
     }, metadata);
     log('registering client', JSON.stringify(properties, null, 4));
-    const client = await issuer.Client.register(properties, keystore);
+    const client = await issuer.Client.register(properties, { keystore });
     log('registered client', client.client_id, JSON.stringify(client.metadata, null, 4));
+    client.CLOCK_TOLERANCE = 5;
     return { issuer, client };
   },
   reject() { throw new Error('expected a rejection'); },
-  gist(content) {
-    return new Promise((resolve, reject) => {
-      quickGist({
-        content,
-        fileExtension: 'jwt',
-      }, (err, response, { files: { 'gist1.jwt': { raw_url } } }) => {
-        if (err) return reject(err);
-        return resolve(raw_url);
-      });
+  async gist(content) {
+    await got.post(echo, {
+      body: {
+        echo: content,
+      },
     });
+    return `${echo}/${Date.now()}`;
   },
 };
