@@ -74,4 +74,23 @@ describe('Discovery', function () {
     assert.equal(jwks.all().length, 4);
     log('fetched jwks_uri', JSON.stringify(jwks.toJSON(), null, 4));
   });
+
+  it('rp-discovery-webfinger-unknown-member', async function () {
+    const testId = 'rp-discovery-webfinger-unknown-member';
+    const input = `${root}/${rpId}/${testId}`;
+    const issuer = await Issuer.webfinger(input);
+    assert(issuer);
+  });
+
+  it('rp-discovery-webfinger-http-href', async function () {
+    const testId = 'rp-discovery-webfinger-http-href';
+    const input = `${root}/${rpId}/${testId}`;
+    try {
+      await Issuer.webfinger(input);
+      reject();
+    } catch (err) {
+      log('caught', err);
+      assert.equal(err.message, 'invalid issuer location');
+    }
+  });
 });

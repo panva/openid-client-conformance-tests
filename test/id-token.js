@@ -111,6 +111,22 @@ describe('ID Token', function () {
     assert(tokens);
   });
 
+  it('rp-id_token-sig+enc-a128kw', async function () {
+    const { client } = await register('rp-id_token-sig+enc-a128kw', {
+      id_token_signed_response_alg: 'RS256',
+      id_token_encrypted_response_alg: 'A128KW',
+      id_token_encrypted_response_enc: 'A256CBC-HS512',
+    });
+    assert.equal(client.id_token_signed_response_alg, 'RS256');
+    assert.equal(client.id_token_encrypted_response_alg, 'A128KW');
+    assert.equal(client.id_token_encrypted_response_enc, 'A256CBC-HS512');
+    const authorization = await authorize(client.authorizationUrl({ redirect_uri, response_type: 'code' }), noFollow);
+
+    const params = client.callbackParams(authorization.headers.location);
+    const tokens = await authorizationCallback(client, redirect_uri, params);
+    assert(tokens);
+  });
+
   it('rp-id_token-sig-none @code-basic,@code-config,@code-dynamic', async function () {
     const { client } = await register('rp-id_token-sig-none', { id_token_signed_response_alg: 'none' });
     assert.equal(client.id_token_signed_response_alg, 'none');
@@ -142,12 +158,30 @@ describe('ID Token', function () {
     });
   });
 
+  describe('rp-id_token-missing-c_hash', function () {
+    forEach({
+      '@code+id_token-hybrid': 'code id_token',
+      '@code+id_token+token-hybrid': 'code id_token token',
+    }, (response_type, profile) => {
+      it(profile, async function () {
+        const { client } = await register('rp-id_token-missing-c_hash', { });
+        const nonce = String(Math.random());
+        const authorization = await authorize(client.authorizationUrl({ redirect_uri, nonce, response_type }), noFollow);
+
+        const params = client.callbackParams(authorization.headers.location.replace('#', '?'));
+        try {
+          await authorizationCallback(client, redirect_uri, params, { nonce });
+          reject();
+        } catch (err) {
+          assert.equal(err.message, 'missing required property c_hash');
+        }
+      });
+    });
+  });
+
   describe('rp-id_token-bad-at_hash', function () {
     forEach({
-      // '@code-basic': 'code',
       '@id_token+token-implicit': 'id_token token',
-      // '@code+id_token-hybrid': 'code id_token',
-      // '@code+token-hybrid': 'code token',
       '@code+id_token+token-hybrid': 'code id_token token',
     }, (response_type, profile) => {
       it(profile, async function () {
@@ -161,6 +195,27 @@ describe('ID Token', function () {
           reject();
         } catch (err) {
           assert.equal(err.message, 'at_hash mismatch');
+        }
+      });
+    });
+  });
+
+  describe('rp-id_token-missing-at_hash', function () {
+    forEach({
+      '@id_token+token-implicit': 'id_token token',
+      '@code+id_token+token-hybrid': 'code id_token token',
+    }, (response_type, profile) => {
+      it(profile, async function () {
+        const { client } = await register('rp-id_token-missing-at_hash', { });
+        const nonce = String(Math.random());
+        const authorization = await authorize(client.authorizationUrl({ redirect_uri, nonce, response_type }), noFollow);
+
+        const params = client.callbackParams(authorization.headers.location.replace('#', '?'));
+        try {
+          await authorizationCallback(client, redirect_uri, params, { nonce });
+          reject();
+        } catch (err) {
+          assert.equal(err.message, 'missing required property at_hash');
         }
       });
     });

@@ -63,4 +63,6 @@ describe('Response Type and Response Mode', function () {
     assert(params.code);
     assert(params.access_token);
   });
+
+  it('rp-response_mode-form_post');
 });
