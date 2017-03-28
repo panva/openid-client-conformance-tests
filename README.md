@@ -1,16 +1,19 @@
 # openid-client conformance tests
 
+[![build][travis-image]][travis-url]
+
 A conformance test suite for [openid-client] library certification of Basic RP, Implicit RP,
 Hybrid RP, Dynamic RP and Config RP profiles.
 
 Executes tests with expectations defined in [RP test tool][test-list] and downloads the log archive
 for each of the tested profiles.
 
-revision: December 2016
+revision: March 2017
+
 
 ```
-$ nvm use 7
-Now using node v7.x.x (npm v3.x.x)
+$ nvm use stable
+Now using node >=v7.6.0
 $ npm install
 ...
 $ npm run "basic" # or "id_token-implicit", "id_token+token-implicit", "code+id_token-hybrid", "code+token-hybrid", "code+id_token+token-hybrid", "config", "dynamic" or "non-profile"
@@ -19,3 +22,5 @@ $ npm run "basic" # or "id_token-implicit", "id_token+token-implicit", "code+id_
 
 [openid-client]: https://github.com/panva/node-openid-client
 [test-list]: https://rp.certification.openid.net:8080/test_list
+[travis-image]: https://img.shields.io/travis/panva/openid-client-conformance-tests/master.svg?style=flat-square&maxAge=7200
+[travis-url]: https://travis-ci.org/panva/openid-client-conformance-tests/builds
