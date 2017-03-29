@@ -12,8 +12,7 @@ revision: March 2017
 
 
 ```
-$ nvm use stable
-Now using node >=v7.6.0
+$ nvm use
 $ npm install
 ...
 $ npm run "basic" # or "id_token-implicit", "id_token+token-implicit", "code+id_token-hybrid", "code+token-hybrid", "code+id_token+token-hybrid", "config", "dynamic" or "non-profile"
