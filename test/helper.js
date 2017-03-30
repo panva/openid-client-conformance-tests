@@ -13,7 +13,7 @@ const url = require('url');
 
 let rpId = 'node-openid-client';
 const echo = 'https://limitless-retreat-96294.herokuapp.com';
-const root = 'https://rp.certification.openid.net:8080';
+const root = process.env.ISSUER || 'https://rp.certification.openid.net:8080';
 const redirectUri = `https://${rpId}.dev/cb`;
 
 const [responseType, profile] = (() => {
@@ -28,16 +28,13 @@ if (responseType && profile) {
   rpId = `${rpId}-${profile}-${responseType}`;
 }
 
-before(function () {
-  return got(`${root}/log/${rpId}`).then((logIndex) => {
-    if (/Clear all test logs/.exec(logIndex.body)) {
-      console.log('Clearing logs');
-      return got(`${root}/clear/${rpId}`).then(() => {
-        console.log('Clearing logs - DONE');
-      });
-    }
-    return Promise.resolve();
-  });
+before(async function () {
+  const logIndex = await got(`${root}/log/${rpId}`);
+  if (/Clear all test logs/.exec(logIndex.body)) {
+    console.log('Clearing logs');
+    await got(`${root}/clear/${rpId}`);
+    console.log('Clearing logs - DONE');
+  }
 });
 
 Issuer.defaultHttpOptions = { timeout: 5000 };
@@ -45,32 +42,30 @@ Issuer.defaultHttpOptions = { timeout: 5000 };
 if (profile) {
   const profileFolder = path.resolve('logs', profile);
   fse.emptyDirSync(`${profileFolder}/${responseType}`);
-  after(function () {
-    return got(`${root}/log/${rpId}`).then((logIndex) => {
-      if (/Download gzipped tar file/.exec(logIndex.body)) {
-        return new Promise((resolve, reject) => {
-          console.log('Downloading logs');
-          got.stream(`${root}/mktar/${rpId}`)
-            .pipe(zlib.createGunzip())
-            .pipe(tar.Extract({
-              path: profileFolder,
-            }))
-            .on('close', () => {
-              fse.move(`${profileFolder}/${rpId}`, `${profileFolder}/${responseType}`, {
-                clobber: true,
-              }, (err) => {
-                if (err) {
-                  reject();
-                } else {
-                  resolve();
-                }
-              });
-            })
-            .on('error', reject);
-        });
-      }
-      return Promise.resolve();
-    });
+  after(async function () {
+    const logIndex = await got(`${root}/log/${rpId}`);
+    if (/Download gzipped tar file/.exec(logIndex.body)) {
+      await new Promise((resolve, reject) => {
+        console.log('Downloading logs');
+        got.stream(`${root}/mktar/${rpId}`)
+          .pipe(zlib.createGunzip())
+          .pipe(tar.Extract({
+            path: profileFolder,
+          }))
+          .on('close', () => {
+            fse.move(`${profileFolder}/${rpId}`, `${profileFolder}/${responseType}`, {
+              clobber: true,
+            }, (err) => {
+              if (err) {
+                reject();
+              } else {
+                resolve();
+              }
+            });
+          })
+          .on('error', reject);
+      });
+    }
   });
 }
 
@@ -142,15 +137,14 @@ module.exports = {
       throw err;
     }
   },
-  authorize(...params) {
+  async authorize(...params) {
     const { pathname, query } = url.parse(params[0], true);
     log('authentication request to', pathname);
     log('authentication request parameters', JSON.stringify(query, null, 4));
-    return got(...params).then((response) => {
-      const { query: resp } = url.parse(response.headers.location.replace('#', '?'), true);
-      log('authentication response', JSON.stringify(resp, null, 4));
-      return response;
-    });
+    const response = await got(...params);
+    const { query: callback } = url.parse(response.headers.location.replace('#', '?'), true);
+    log('authentication response', JSON.stringify(callback, null, 4));
+    return response;
   },
   async discover(test) {
     const issuer = await Issuer.discover(`${root}/${rpId}/${test}`);
@@ -160,12 +154,14 @@ module.exports = {
   async register(test, metadata, keystore) {
     const issuer = await Issuer.discover(`${root}/${rpId}/${test}`);
     log('discovered', issuer.issuer);
+
     const properties = Object.assign({
       client_name: Issuer.defaultHttpOptions.headers['User-Agent'],
       redirect_uris: [redirectUri],
       response_types: responseType ? [responseType.replace(/\+/g, ' ')] : ['code', 'id_token', 'code token', 'code id_token', 'id_token token', 'code id_token token', 'none'],
       grant_types: responseType && responseType.indexOf('token') === -1 ? ['authorization_code'] : ['implicit', 'authorization_code'],
     }, metadata);
+
     log('registering client', JSON.stringify(properties, null, 4));
     const client = await issuer.Client.register(properties, { keystore });
     log('registered client', client.client_id, JSON.stringify(client.metadata, null, 4));
@@ -174,11 +170,7 @@ module.exports = {
   },
   reject() { throw new Error('expected a rejection'); },
   async gist(content) {
-    await got.post(echo, {
-      body: {
-        echo: content,
-      },
-    });
+    await got.post(echo, { body: { echo: content } });
     return `${echo}/${Date.now()}`;
   },
 };

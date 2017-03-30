@@ -2,6 +2,7 @@
 
 /* eslint-disable no-restricted-syntax */
 
+const url = require('url');
 const { Issuer } = require('openid-client');
 const {
   discover,
@@ -31,7 +32,7 @@ describe('Discovery', function () {
 
   it('rp-discovery-webfinger-acct @code-dynamic', async function () {
     const testId = 'rp-discovery-webfinger-acct';
-    const input = `acct:${rpId}.${testId}@rp.certification.openid.net:8080`;
+    const input = `acct:${rpId}.${testId}@${url.parse(root).host}`;
     const issuer = await Issuer.webfinger(input);
     log('webfinger using', input, 'discovered', issuer.issuer);
     assert.equal(issuer.issuer, `${root}/${rpId}/${testId}`);
