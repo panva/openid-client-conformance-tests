@@ -1,1 +1,15 @@
 language: node_js
+install:
+  - npm install --production
+script:
+  - npm run $PROFILE
+env:
+  - PROFILE=non-profile
+  - PROFILE=basic
+  - PROFILE=config
+  - PROFILE=dynamic
+  - PROFILE=id_token-implicit
+  - PROFILE=id_token+token-implicit
+  - PROFILE=code+id_token-hybrid
+  - PROFILE=code+token-hybrid
+  - PROFILE=code+id_token+token-hybrid
