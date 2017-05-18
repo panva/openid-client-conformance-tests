@@ -37,6 +37,10 @@ before(async function () {
   }
 });
 
+before(function kickstartEcho() {
+  return got.get(echo).then(() => {}, () => {});
+});
+
 Issuer.defaultHttpOptions = { timeout: 5000 };
 
 if (profile) {
