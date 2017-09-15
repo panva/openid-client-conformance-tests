@@ -10,6 +10,7 @@ const fs = require('fs');
 const tar = require('tar');
 const got = require('got');
 const url = require('url');
+const timekeeper = require('timekeeper');
 
 let rpId = 'node-openid-client';
 const echo = 'https://limitless-retreat-96294.herokuapp.com';
@@ -27,6 +28,13 @@ const [responseType, profile] = (() => {
 if (responseType && profile) {
   rpId = `${rpId}-${profile}-${responseType}`;
 }
+
+async function syncTime() {
+  const { headers: { date } } = await got.head(root);
+  timekeeper.travel(new Date(date));
+}
+
+before(syncTime);
 
 before(async function () {
   const logIndex = await got(`${root}/log/${rpId}`);
@@ -119,6 +127,7 @@ module.exports = {
   it: myIt,
   describe: myDescribe,
   rpId,
+  syncTime,
   redirect_uri: redirectUri,
   redirect_uris: [redirectUri],
   async authorizationCallback(client, ...params) {
