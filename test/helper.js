@@ -171,6 +171,7 @@ module.exports = {
     const properties = Object.assign({
       client_name: Issuer.defaultHttpOptions.headers['User-Agent'],
       redirect_uris: [redirectUri],
+      contacts: ['dummy@dummy.org'],
       response_types: responseType ? [responseType.replace(/\+/g, ' ')] : ['code', 'id_token', 'code token', 'code id_token', 'id_token token', 'code id_token token', 'none'],
       grant_types: responseType && responseType.indexOf('token') === -1 ? ['authorization_code'] : ['implicit', 'authorization_code'],
     }, metadata);
