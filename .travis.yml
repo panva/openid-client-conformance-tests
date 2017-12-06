@@ -4,7 +4,6 @@ install:
 script:
   - npm run $PROFILE
 env:
-  - PROFILE=non-profile
   - PROFILE=basic
   - PROFILE=config
   - PROFILE=dynamic
