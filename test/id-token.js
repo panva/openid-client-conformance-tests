@@ -1,7 +1,7 @@
 'use strict';
 
 const { forEach } = require('lodash');
-const jose = require('node-jose'); // eslint-ignore-line import/no-extraneous-dependencies
+const jose = require('node-jose'); // eslint-disable-line import/no-extraneous-dependencies
 const {
   noFollow,
   redirect_uri,
