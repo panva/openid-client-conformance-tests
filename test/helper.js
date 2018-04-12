@@ -3,7 +3,6 @@
 /* eslint-disable no-console */
 
 const { Issuer } = require('openid-client');
-const zlib = require('zlib');
 const path = require('path');
 const fse = require('fs-extra');
 const fs = require('fs');
@@ -56,11 +55,10 @@ if (profile) {
   fse.emptyDirSync(`${profileFolder}/${responseType}`);
   after(async function () {
     const logIndex = await got(`${root}/log/${rpId}`);
-    if (/Download gzipped tar file/.exec(logIndex.body)) {
+    if (/Download tar file/.exec(logIndex.body)) {
       await new Promise((resolve, reject) => {
         console.log('Downloading logs');
         got.stream(`${root}/mktar/${rpId}`)
-          .pipe(zlib.createGunzip())
           .pipe(tar.Extract({
             path: profileFolder,
           }))
