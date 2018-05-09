@@ -21,5 +21,5 @@ $ npm run "basic" # or "id_token-implicit", "id_token+token-implicit", "code+id_
 
 [openid-client]: https://github.com/panva/node-openid-client
 [test-list]: https://rp.certification.openid.net:8080/test_list
-[travis-image]: https://img.shields.io/travis/panva/openid-client-conformance-tests/master.svg?style=flat-square&maxAge=7200
-[travis-url]: https://travis-ci.org/panva/openid-client-conformance-tests/builds
+[travis-image]: https://travis-ci.com/panva/openid-client-conformance-tests.svg?branch=master
+[travis-url]: https://travis-ci.com/panva/openid-client-conformance-tests/builds
