@@ -8,9 +8,6 @@ Hybrid RP, Dynamic RP and Config RP profiles.
 Executes tests with expectations defined in [RP test tool][test-list] and downloads the log archive
 for each of the tested profiles.
 
-revision: March 2017
-
-
 ```
 $ nvm use
 $ npm install
