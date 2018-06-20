@@ -6,10 +6,15 @@ const {
   register,
   describe,
   authorize,
+  authorizationCallback,
   it,
 } = require('./helper');
 
+const { forEach } = require('lodash');
 const assert = require('assert');
+const url = require('url');
+const got = require('got');
+const querystring = require('querystring');
 
 describe('Response Type and Response Mode', function () {
   it('rp-response_type-code @code-basic', async function () {
@@ -64,5 +69,40 @@ describe('Response Type and Response Mode', function () {
     assert(params.access_token);
   });
 
-  it('rp-response_mode-form_post');
+  describe('rp-response_mode-form_post', function () {
+    forEach({
+      '@code-basic': 'code',
+      '@id_token-implicit': 'id_token',
+      '@id_token+token-implicit': 'id_token token',
+      '@code+id_token-hybrid': 'code id_token',
+      '@code+token-hybrid': 'code token',
+      '@code+id_token+token-hybrid': 'code id_token token',
+    }, (response_type, profile) => {
+      it(profile, async function () {
+        const { client } = await register('rp-response_mode-form_post', { });
+
+        const nonce = String(Math.random());
+        const request = client.authorizationUrl({ response_mode: 'form_post', redirect_uri, response_type, nonce });
+        const { pathname, query } = url.parse(request, true);
+        log('authentication request to', pathname);
+        log('authentication request parameters', JSON.stringify(query, null, 4));
+        const authorization = await got(request, noFollow);
+
+        authorization.method = 'POST';
+
+        authorization.body = querystring.stringify(
+          authorization.body.match(/<input type="hidden" name="\w+" value=".+"\/>/g).reduce((acc, match) => {
+            const [, key, value] = match.match(/name="(\w+)" value="(.+)"/);
+            acc[key] = value;
+            return acc;
+          }, {}),
+        );
+
+        const params = client.callbackParams(authorization);
+        log('authentication response', JSON.stringify(params, null, 4));
+        const tokens = await authorizationCallback(client, redirect_uri, params, { nonce });
+        assert(tokens);
+      });
+    });
+  });
 });
