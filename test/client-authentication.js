@@ -29,41 +29,44 @@ describe('Client Authentication', function () {
         const authorization = await authorize(client.authorizationUrl({ redirect_uri, nonce, response_type }), noFollow);
 
         const params = client.callbackParams(authorization.headers.location.replace('#', '?'));
-        const tokens = await authorizationCallback(client, redirect_uri, params, { nonce });
+        const tokens = await authorizationCallback(client, redirect_uri, params, { nonce, response_type });
         assert(tokens);
       });
     });
   });
 
   it('rp-token_endpoint-client_secret_jwt', async function () {
+    const response_type = 'code';
     const { client } = await register('rp-token_endpoint-client_secret_jwt', { token_endpoint_auth_method: 'client_secret_jwt' });
     assert.equal(client.token_endpoint_auth_method, 'client_secret_jwt');
-    const authorization = await authorize(client.authorizationUrl({ redirect_uri, response_type: 'code' }), noFollow);
+    const authorization = await authorize(client.authorizationUrl({ redirect_uri, response_type }), noFollow);
 
     const params = client.callbackParams(authorization.headers.location);
-    const tokens = await authorizationCallback(client, redirect_uri, params);
+    const tokens = await authorizationCallback(client, redirect_uri, params, { response_type });
     assert(tokens);
   });
 
   it('rp-token_endpoint-client_secret_post', async function () {
+    const response_type = 'code';
     const { client } = await register('rp-token_endpoint-client_secret_post', { token_endpoint_auth_method: 'client_secret_post' });
     assert.equal(client.token_endpoint_auth_method, 'client_secret_post');
-    const authorization = await authorize(client.authorizationUrl({ redirect_uri, response_type: 'code' }), noFollow);
+    const authorization = await authorize(client.authorizationUrl({ redirect_uri, response_type }), noFollow);
 
     const params = client.callbackParams(authorization.headers.location);
-    const tokens = await authorizationCallback(client, redirect_uri, params);
+    const tokens = await authorizationCallback(client, redirect_uri, params, { response_type });
     assert(tokens);
   });
 
   it('rp-token_endpoint-private_key_jwt', async function () {
     const keystore = jose.JWK.createKeyStore();
     await keystore.generate('EC', 'P-256');
+    const response_type = 'code';
     const { client } = await register('rp-token_endpoint-private_key_jwt', { token_endpoint_auth_method: 'private_key_jwt' }, keystore);
     assert.equal(client.token_endpoint_auth_method, 'private_key_jwt');
-    const authorization = await authorize(client.authorizationUrl({ redirect_uri, response_type: 'code' }), noFollow);
+    const authorization = await authorize(client.authorizationUrl({ redirect_uri, response_type }), noFollow);
 
     const params = client.callbackParams(authorization.headers.location);
-    const tokens = await authorizationCallback(client, redirect_uri, params);
+    const tokens = await authorizationCallback(client, redirect_uri, params, { response_type });
     assert(tokens);
   });
 });

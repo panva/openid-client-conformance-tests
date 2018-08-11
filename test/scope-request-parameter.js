@@ -30,7 +30,7 @@ describe('scope Request Parameter', function () {
         const authorization = await authorize(client.authorizationUrl({ nonce, redirect_uri, response_type, scope: 'openid email' }), noFollow);
 
         const params = client.callbackParams(authorization.headers.location.replace('#', '?'));
-        const tokens = await authorizationCallback(client, redirect_uri, params, { nonce });
+        const tokens = await authorizationCallback(client, redirect_uri, params, { nonce, response_type });
 
         const userinfo = await (async () => {
           if (tokens.access_token) {

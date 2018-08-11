@@ -35,7 +35,7 @@ describe('nonce Request Parameter', function () {
         const authorization = await authorize(client.authorizationUrl({ nonce, redirect_uri, response_type }), noFollow);
 
         const params = client.callbackParams(authorization.headers.location.replace('#', '?'));
-        const tokens = await authorizationCallback(client, redirect_uri, params, { nonce });
+        const tokens = await authorizationCallback(client, redirect_uri, params, { nonce, response_type });
         assert(tokens);
       });
     });
@@ -57,7 +57,7 @@ describe('nonce Request Parameter', function () {
 
         const params = client.callbackParams(authorization.headers.location.replace('#', '?'));
         try {
-          await authorizationCallback(client, redirect_uri, params, { nonce });
+          await authorizationCallback(client, redirect_uri, params, { nonce, response_type });
           reject();
         } catch (err) {
           assert.equal(err.message, 'nonce mismatch');

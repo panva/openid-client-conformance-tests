@@ -32,7 +32,7 @@ describe('UserInfo Endpoint', function () {
         const authorization = await authorize(client.authorizationUrl({ nonce, redirect_uri, response_type }), noFollow);
 
         const params = client.callbackParams(authorization.headers.location.replace('#', '?'));
-        const tokens = await authorizationCallback(client, redirect_uri, params, { nonce });
+        const tokens = await authorizationCallback(client, redirect_uri, params, { nonce, response_type });
         const userinfo = await userinfoCall(client, tokens, { via: 'header' });
         assert(userinfo);
       });
@@ -53,7 +53,7 @@ describe('UserInfo Endpoint', function () {
         const authorization = await authorize(client.authorizationUrl({ nonce, redirect_uri, response_type }), noFollow);
 
         const params = client.callbackParams(authorization.headers.location.replace('#', '?'));
-        const tokens = await authorizationCallback(client, redirect_uri, params, { nonce });
+        const tokens = await authorizationCallback(client, redirect_uri, params, { nonce, response_type });
         const userinfo = await userinfoCall(client, tokens, { via: 'body', verb: 'post' });
         assert(userinfo);
       });
@@ -61,38 +61,41 @@ describe('UserInfo Endpoint', function () {
   });
 
   it('rp-userinfo-sig @code-config,@code-dynamic', async function () {
+    const response_type = 'code';
     const { client } = await register('rp-userinfo-sig', { redirect_uris, userinfo_signed_response_alg: 'HS256' });
-    const authorization = await authorize(client.authorizationUrl({ redirect_uri, response_type: 'code' }), noFollow);
+    const authorization = await authorize(client.authorizationUrl({ redirect_uri, response_type }), noFollow);
     const params = client.callbackParams(authorization.headers.location);
-    const tokens = await authorizationCallback(client, redirect_uri, params);
+    const tokens = await authorizationCallback(client, redirect_uri, params, { response_type });
     const userinfo = await userinfoCall(client, tokens);
     assert(userinfo);
   });
 
   it('rp-userinfo-sig+enc', async function () {
+    const response_type = 'code';
     const keystore = jose.JWK.createKeyStore();
     await keystore.generate('RSA', 512);
     const { client } = await register('rp-userinfo-sig+enc', { userinfo_signed_response_alg: 'RS256', userinfo_encrypted_response_alg: 'RSA1_5', redirect_uris }, keystore);
     assert.equal(client.userinfo_signed_response_alg, 'RS256');
     assert.equal(client.userinfo_encrypted_response_alg, 'RSA1_5');
-    const authorization = await authorize(client.authorizationUrl({ redirect_uri, response_type: 'code' }), noFollow);
+    const authorization = await authorize(client.authorizationUrl({ redirect_uri, response_type }), noFollow);
 
     const params = client.callbackParams(authorization.headers.location);
-    const tokens = await authorizationCallback(client, redirect_uri, params);
+    const tokens = await authorizationCallback(client, redirect_uri, params, { response_type });
     const userinfo = await userinfoCall(client, tokens);
     assert(userinfo.sub);
   });
 
   it('rp-userinfo-enc', async function () {
+    const response_type = 'code';
     const keystore = jose.JWK.createKeyStore();
     await keystore.generate('RSA', 512);
     const { client } = await register('rp-userinfo-enc', { userinfo_signed_response_alg: 'none', userinfo_encrypted_response_alg: 'RSA1_5', redirect_uris }, keystore);
     assert.equal(client.userinfo_signed_response_alg, 'none');
     assert.equal(client.userinfo_encrypted_response_alg, 'RSA1_5');
-    const authorization = await authorize(client.authorizationUrl({ redirect_uri, response_type: 'code' }), noFollow);
+    const authorization = await authorize(client.authorizationUrl({ redirect_uri, response_type }), noFollow);
 
     const params = client.callbackParams(authorization.headers.location);
-    const tokens = await authorizationCallback(client, redirect_uri, params);
+    const tokens = await authorizationCallback(client, redirect_uri, params, { response_type });
     const userinfo = await userinfoCall(client, tokens);
     assert(userinfo.sub);
   });
@@ -111,7 +114,7 @@ describe('UserInfo Endpoint', function () {
         const authorization = await authorize(client.authorizationUrl({ nonce, redirect_uri, response_type }), noFollow);
 
         const params = client.callbackParams(authorization.headers.location.replace('#', '?'));
-        const tokens = await authorizationCallback(client, redirect_uri, params, { nonce });
+        const tokens = await authorizationCallback(client, redirect_uri, params, { nonce, response_type });
         try {
           await userinfoCall(client, tokens);
           reject();

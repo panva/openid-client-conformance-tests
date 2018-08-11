@@ -33,7 +33,7 @@ describe('ID Token', function () {
 
         const params = client.callbackParams(authorization.headers.location.replace('#', '?'));
         try {
-          await authorizationCallback(client, redirect_uri, params, { nonce });
+          await authorizationCallback(client, redirect_uri, params, { nonce, response_type });
           reject();
         } catch (err) {
           assert.equal(err.message, 'invalid signature');
@@ -43,13 +43,14 @@ describe('ID Token', function () {
   });
 
   it('rp-id_token-bad-sig-hs256', async function () {
+    const response_type = 'code';
     const { client } = await register('rp-id_token-bad-sig-hs256', { id_token_signed_response_alg: 'HS256' });
     assert.equal(client.id_token_signed_response_alg, 'HS256');
-    const authorization = await authorize(client.authorizationUrl({ redirect_uri, response_type: 'code' }), noFollow);
+    const authorization = await authorize(client.authorizationUrl({ redirect_uri, response_type }), noFollow);
 
     const params = client.callbackParams(authorization.headers.location);
     try {
-      await authorizationCallback(client, redirect_uri, params);
+      await authorizationCallback(client, redirect_uri, params, { response_type });
       reject();
     } catch (err) {
       assert.equal(err.message, 'invalid signature');
@@ -57,15 +58,16 @@ describe('ID Token', function () {
   });
 
   it('rp-id_token-sig+enc', async function () {
+    const response_type = 'code';
     const keystore = jose.JWK.createKeyStore();
     await keystore.generate('RSA', 512);
     const { client } = await register('rp-id_token-sig+enc', { id_token_signed_response_alg: 'RS256', id_token_encrypted_response_alg: 'RSA1_5' }, keystore);
     assert.equal(client.id_token_signed_response_alg, 'RS256');
     assert.equal(client.id_token_encrypted_response_alg, 'RSA1_5');
-    const authorization = await authorize(client.authorizationUrl({ redirect_uri, response_type: 'code' }), noFollow);
+    const authorization = await authorize(client.authorizationUrl({ redirect_uri, response_type }), noFollow);
 
     const params = client.callbackParams(authorization.headers.location);
-    const tokens = await authorizationCallback(client, redirect_uri, params);
+    const tokens = await authorizationCallback(client, redirect_uri, params, { response_type });
     assert(tokens);
   });
 
@@ -85,33 +87,36 @@ describe('ID Token', function () {
         const authorization = await authorize(client.authorizationUrl({ redirect_uri, nonce, response_type }), noFollow);
 
         const params = client.callbackParams(authorization.headers.location.replace('#', '?'));
-        const tokens = await authorizationCallback(client, redirect_uri, params, { nonce });
+        const tokens = await authorizationCallback(client, redirect_uri, params, { nonce, response_type });
         assert(tokens);
       });
     });
   });
 
   it('rp-id_token-sig-hs256', async function () {
+    const response_type = 'code';
     const { client } = await register('rp-id_token-sig-hs256', { id_token_signed_response_alg: 'HS256' });
     assert.equal(client.id_token_signed_response_alg, 'HS256');
-    const authorization = await authorize(client.authorizationUrl({ redirect_uri, response_type: 'code' }), noFollow);
+    const authorization = await authorize(client.authorizationUrl({ redirect_uri, response_type }), noFollow);
 
     const params = client.callbackParams(authorization.headers.location);
-    const tokens = await authorizationCallback(client, redirect_uri, params);
+    const tokens = await authorizationCallback(client, redirect_uri, params, { response_type });
     assert(tokens);
   });
 
   it('rp-id_token-sig-es256', async function () {
+    const response_type = 'code';
     const { client } = await register('rp-id_token-sig-es256', { id_token_signed_response_alg: 'ES256' });
     assert.equal(client.id_token_signed_response_alg, 'ES256');
-    const authorization = await authorize(client.authorizationUrl({ redirect_uri, response_type: 'code' }), noFollow);
+    const authorization = await authorize(client.authorizationUrl({ redirect_uri, response_type }), noFollow);
 
     const params = client.callbackParams(authorization.headers.location);
-    const tokens = await authorizationCallback(client, redirect_uri, params);
+    const tokens = await authorizationCallback(client, redirect_uri, params, { response_type });
     assert(tokens);
   });
 
   it('rp-id_token-sig+enc-a128kw', async function () {
+    const response_type = 'code';
     const { client } = await register('rp-id_token-sig+enc-a128kw', {
       id_token_signed_response_alg: 'RS256',
       id_token_encrypted_response_alg: 'A128KW',
@@ -120,20 +125,21 @@ describe('ID Token', function () {
     assert.equal(client.id_token_signed_response_alg, 'RS256');
     assert.equal(client.id_token_encrypted_response_alg, 'A128KW');
     assert.equal(client.id_token_encrypted_response_enc, 'A256CBC-HS512');
-    const authorization = await authorize(client.authorizationUrl({ redirect_uri, response_type: 'code' }), noFollow);
+    const authorization = await authorize(client.authorizationUrl({ redirect_uri, response_type }), noFollow);
 
     const params = client.callbackParams(authorization.headers.location);
-    const tokens = await authorizationCallback(client, redirect_uri, params);
+    const tokens = await authorizationCallback(client, redirect_uri, params, { response_type });
     assert(tokens);
   });
 
   it('rp-id_token-sig-none @code-basic,@code-config,@code-dynamic', async function () {
+    const response_type = 'code';
     const { client } = await register('rp-id_token-sig-none', { id_token_signed_response_alg: 'none' });
     assert.equal(client.id_token_signed_response_alg, 'none');
-    const authorization = await authorize(client.authorizationUrl({ redirect_uri }), noFollow);
+    const authorization = await authorize(client.authorizationUrl({ redirect_uri, response_type }), noFollow);
 
     const params = client.callbackParams(authorization.headers.location);
-    const tokens = await authorizationCallback(client, redirect_uri, params);
+    const tokens = await authorizationCallback(client, redirect_uri, params, { response_type });
     assert(tokens.id_token);
   });
 
@@ -149,7 +155,7 @@ describe('ID Token', function () {
 
         const params = client.callbackParams(authorization.headers.location.replace('#', '?'));
         try {
-          await authorizationCallback(client, redirect_uri, params, { nonce });
+          await authorizationCallback(client, redirect_uri, params, { nonce, response_type });
           reject();
         } catch (err) {
           assert.equal(err.message, 'c_hash mismatch');
@@ -170,7 +176,7 @@ describe('ID Token', function () {
 
         const params = client.callbackParams(authorization.headers.location.replace('#', '?'));
         try {
-          await authorizationCallback(client, redirect_uri, params, { nonce });
+          await authorizationCallback(client, redirect_uri, params, { nonce, response_type });
           reject();
         } catch (err) {
           assert.equal(err.message, 'missing required property c_hash');
@@ -191,7 +197,7 @@ describe('ID Token', function () {
 
         const params = client.callbackParams(authorization.headers.location.replace('#', '?'));
         try {
-          await authorizationCallback(client, redirect_uri, params, { nonce });
+          await authorizationCallback(client, redirect_uri, params, { nonce, response_type });
           reject();
         } catch (err) {
           assert.equal(err.message, 'at_hash mismatch');
@@ -212,7 +218,7 @@ describe('ID Token', function () {
 
         const params = client.callbackParams(authorization.headers.location.replace('#', '?'));
         try {
-          await authorizationCallback(client, redirect_uri, params, { nonce });
+          await authorizationCallback(client, redirect_uri, params, { nonce, response_type });
           reject();
         } catch (err) {
           assert.equal(err.message, 'missing required property at_hash');
@@ -237,7 +243,7 @@ describe('ID Token', function () {
 
         const params = client.callbackParams(authorization.headers.location.replace('#', '?'));
         try {
-          await authorizationCallback(client, redirect_uri, params, { nonce });
+          await authorizationCallback(client, redirect_uri, params, { nonce, response_type });
           reject();
         } catch (err) {
           assert.equal(err.message, 'unexpected iss value');
@@ -262,7 +268,7 @@ describe('ID Token', function () {
 
         const params = client.callbackParams(authorization.headers.location.replace('#', '?'));
         try {
-          await authorizationCallback(client, redirect_uri, params, { nonce });
+          await authorizationCallback(client, redirect_uri, params, { nonce, response_type });
           reject();
         } catch (err) {
           assert.equal(err.message, 'missing required JWT property iat');
@@ -273,13 +279,14 @@ describe('ID Token', function () {
 
 
   it('rp-id_token-bad-sig-es256', async function () {
+    const response_type = 'code';
     const { client } = await register('rp-id_token-bad-sig-es256', { id_token_signed_response_alg: 'ES256' });
     assert.equal(client.id_token_signed_response_alg, 'ES256');
-    const authorization = await authorize(client.authorizationUrl({ redirect_uri, response_type: 'code' }), noFollow);
+    const authorization = await authorize(client.authorizationUrl({ redirect_uri, response_type }), noFollow);
 
     const params = client.callbackParams(authorization.headers.location);
     try {
-      await authorizationCallback(client, redirect_uri, params);
+      await authorizationCallback(client, redirect_uri, params, { response_type });
       reject();
     } catch (err) {
       assert.equal(err.message, 'invalid signature');
@@ -302,7 +309,7 @@ describe('ID Token', function () {
 
         const params = client.callbackParams(authorization.headers.location.replace('#', '?'));
         try {
-          await authorizationCallback(client, redirect_uri, params, { nonce });
+          await authorizationCallback(client, redirect_uri, params, { nonce, response_type });
           reject();
         } catch (err) {
           assert.equal(err.message, 'aud is missing the client_id');
@@ -327,7 +334,7 @@ describe('ID Token', function () {
 
         const params = client.callbackParams(authorization.headers.location.replace('#', '?'));
         try {
-          await authorizationCallback(client, redirect_uri, params, { nonce });
+          await authorizationCallback(client, redirect_uri, params, { nonce, response_type });
           reject();
         } catch (err) {
           assert.equal(err.message, 'missing required JWT property sub');
@@ -351,7 +358,7 @@ describe('ID Token', function () {
         const authorization = await authorize(client.authorizationUrl({ redirect_uri, nonce, response_type }), noFollow);
 
         const params = client.callbackParams(authorization.headers.location.replace('#', '?'));
-        const tokens = await authorizationCallback(client, redirect_uri, params, { nonce });
+        const tokens = await authorizationCallback(client, redirect_uri, params, { nonce, response_type });
         assert(tokens);
       });
     });
@@ -373,7 +380,7 @@ describe('ID Token', function () {
 
         const params = client.callbackParams(authorization.headers.location.replace('#', '?'));
         try {
-          await authorizationCallback(client, redirect_uri, params, { nonce });
+          await authorizationCallback(client, redirect_uri, params, { nonce, response_type });
           reject();
         } catch (err) {
           assert.equal(err.message, 'multiple matching keys, kid must be provided');

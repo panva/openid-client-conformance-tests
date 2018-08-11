@@ -100,7 +100,7 @@ describe('Response Type and Response Mode', function () {
 
         const params = client.callbackParams(authorization);
         log('authentication response', JSON.stringify(params, null, 4));
-        const tokens = await authorizationCallback(client, redirect_uri, params, { nonce });
+        const tokens = await authorizationCallback(client, redirect_uri, params, { nonce, response_type });
         assert(tokens);
       });
     });
