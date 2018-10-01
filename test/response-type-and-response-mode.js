@@ -6,6 +6,7 @@ const {
   register,
   describe,
   authorize,
+  reject,
   authorizationCallback,
   it,
 } = require('./helper');
@@ -102,6 +103,48 @@ describe('Response Type and Response Mode', function () {
         log('authentication response', JSON.stringify(params, null, 4));
         const tokens = await authorizationCallback(client, redirect_uri, params, { nonce, response_type });
         assert(tokens);
+      });
+    });
+  });
+
+  describe('rp-response_mode-form_post-error', function () {
+    forEach({
+      '@code-basic': 'code',
+      '@id_token-implicit': 'id_token',
+      '@id_token+token-implicit': 'id_token token',
+      '@code+id_token-hybrid': 'code id_token',
+      '@code+token-hybrid': 'code token',
+      '@code+id_token+token-hybrid': 'code id_token token',
+    }, (response_type, profile) => {
+      it(profile, async function () {
+        const { client } = await register('rp-response_mode-form_post-error', { });
+
+        const nonce = String(Math.random());
+        const state = String(Math.random());
+        const request = client.authorizationUrl({ response_mode: 'form_post', redirect_uri, response_type, nonce, state, prompt: 'none', max_age: 0 });
+        const { pathname, query } = url.parse(request, true);
+        log('authentication request to', pathname);
+        log('authentication request parameters', JSON.stringify(query, null, 4));
+        const authorization = await got(request, noFollow);
+
+        authorization.method = 'POST';
+
+        authorization.body = querystring.stringify(
+          authorization.body.match(/<input type="hidden" name="\w+" value=".+"\/>/g).reduce((acc, match) => {
+            const [, key, value] = match.match(/name="(\w+)" value="(.+)"/);
+            acc[key] = value;
+            return acc;
+          }, {}),
+        );
+
+        const params = client.callbackParams(authorization);
+        log('authentication response', JSON.stringify(params, null, 4));
+        try {
+          await authorizationCallback(client, redirect_uri, params, { nonce, response_type, state });
+          reject();
+        } catch (err) {
+          assert.equal(err.message, 'login_required');
+        }
       });
     });
   });
