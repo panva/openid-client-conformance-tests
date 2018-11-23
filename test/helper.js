@@ -113,11 +113,15 @@ function myIt(...args) {
     it(args[0]);
   }
 }
+myIt.skip = it.skip;
+myIt.only = it.only;
 
 function myDescribe(...args) {
   if (args[0].startsWith('rp-')) testId = args[0];
   describe.apply(this, args);
 }
+myDescribe.skip = describe.skip;
+myDescribe.only = describe.only;
 
 module.exports = {
   noFollow: { followRedirect: false },

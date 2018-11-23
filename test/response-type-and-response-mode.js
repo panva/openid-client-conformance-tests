@@ -20,7 +20,7 @@ const querystring = require('querystring');
 describe('Response Type and Response Mode', function () {
   it('rp-response_type-code @code-basic', async function () {
     const { client } = await register('rp-response_type-code', { });
-    const authorization = await authorize(client.authorizationUrl({ redirect_uri }), noFollow);
+    const authorization = await authorize(client.authorizationUrl({ redirect_uri, response_type: 'code' }), noFollow);
     const params = client.callbackParams(authorization.headers.location);
     assert(params.code);
   });
