@@ -4,7 +4,7 @@ const assert = require('assert');
 const jose = require('node-jose'); // eslint-disable-line import/no-extraneous-dependencies
 
 const {
-  gist,
+  echo,
   redirect_uri,
   register,
   noFollow,
@@ -28,7 +28,7 @@ describe('request_uri Request Parameter', function () {
 
     const requestObject = await client.requestObject({ state: 'foobar' });
 
-    const request_uri = await gist(requestObject);
+    const request_uri = await echo.post(requestObject, 'application/jwt');
     assert.equal(client.request_object_signing_alg, 'none');
     assert.equal(client.request_object_encryption_alg, 'RSA1_5');
     assert.equal(client.request_object_encryption_enc, 'A128CBC-HS256');
@@ -51,7 +51,7 @@ describe('request_uri Request Parameter', function () {
 
     const requestObject = await client.requestObject({ state: 'foobar' });
 
-    const request_uri = await gist(requestObject);
+    const request_uri = await echo.post(requestObject, 'application/jwt');
     assert.equal(client.request_object_signing_alg, 'RS256');
     assert.equal(client.request_object_encryption_alg, 'RSA1_5');
     assert.equal(client.request_object_encryption_enc, 'A128CBC-HS256');
@@ -65,7 +65,7 @@ describe('request_uri Request Parameter', function () {
     const response_type = 'code';
     const { client } = await register('rp-request_uri-unsigned', { request_object_signing_alg: 'none' });
     const requestObject = await client.requestObject({ state: 'foobar' });
-    const request_uri = await gist(requestObject);
+    const request_uri = await echo.post(requestObject, 'application/jwt');
     assert.equal(client.request_object_signing_alg, 'none');
     const authorization = await authorize(client.authorizationUrl({ redirect_uri, request_uri, response_type }), noFollow);
     const params = client.callbackParams(authorization.headers.location);
@@ -82,7 +82,7 @@ describe('request_uri Request Parameter', function () {
 
     const { client } = await register('rp-request_uri-sig', { request_object_signing_alg: 'RS256' }, keystore);
     const requestObject = await client.requestObject({ state: 'foobar' });
-    const request_uri = await gist(requestObject);
+    const request_uri = await echo.post(requestObject, 'application/jwt');
     assert.equal(client.request_object_signing_alg, 'RS256');
     const authorization = await authorize(client.authorizationUrl({ redirect_uri, request_uri, response_type }), noFollow);
     const params = client.callbackParams(authorization.headers.location);

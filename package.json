@@ -25,10 +25,10 @@
   "dependencies": {
     "base64url": "^2.0.0",
     "fs-extra": "^1.0.0",
-    "got": "^6.6.3",
-    "lodash": "^4.17.2",
+    "got": "^9.6.0",
+    "lodash": "^4.17.11",
     "mocha": "^3.1.2",
-    "nock": "^9.0.2",
+    "nock": "^9.6.1",
     "openid-client": "^2.0.0",
     "tar": "^2.2.1",
     "timekeeper": "^1.0.0"
@@ -36,7 +36,7 @@
   "devDependencies": {
     "eslint": "^3.9.1",
     "eslint-config-airbnb-base": "^10.0.0",
-    "eslint-plugin-import": "^2.0.1",
+    "eslint-plugin-import": "^2.16.0",
     "istanbul": "next"
   }
 }

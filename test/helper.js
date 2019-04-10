@@ -12,7 +12,7 @@ const url = require('url');
 const timekeeper = require('timekeeper');
 
 let rpId = 'node-openid-client';
-const echo = 'https://limitless-retreat-96294.herokuapp.com';
+const echoUrl = 'https://limitless-retreat-96294.herokuapp.com';
 const root = process.env.ISSUER || 'https://rp.certification.openid.net:8080';
 const redirectUri = `https://${rpId}.dev/cb`;
 
@@ -45,7 +45,7 @@ before(async function () {
 });
 
 before(function kickstartEcho() {
-  return got.get(echo).then(() => {}, () => {});
+  return got.get(echoUrl).then(() => {}, () => {});
 });
 
 Issuer.defaultHttpOptions = { timeout: 5000 };
@@ -185,8 +185,14 @@ module.exports = {
     return { issuer, client };
   },
   reject() { throw new Error('expected a rejection'); },
-  async gist(content) {
-    await got.post(echo, { body: { echo: content } });
-    return `${echo}/${Date.now()}`;
+  echo: {
+    async post(body, type) {
+      await got.post(echoUrl, { body, headers: { 'content-type': type } });
+      return `${echoUrl}/${Date.now()}`;
+    },
+    async get() {
+      const { body } = await got.get(echoUrl);
+      return body;
+    },
   },
 };
