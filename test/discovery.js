@@ -1,9 +1,11 @@
-'use strict';
-
 /* eslint-disable no-restricted-syntax */
 
 const url = require('url');
 const { Issuer } = require('openid-client');
+
+const { strict: assert } = require('assert');
+const got = require('got');
+const nock = require('nock');
 const {
   discover,
   noFollow,
@@ -14,10 +16,6 @@ const {
   it,
 } = require('./helper');
 
-const assert = require('assert');
-const got = require('got');
-const nock = require('nock');
-
 afterEach(nock.cleanAll);
 afterEach(() => nock.enableNetConnect());
 
@@ -26,7 +24,7 @@ describe('Discovery', function () {
     const testId = 'rp-discovery-webfinger-url';
     const input = `${root}/${rpId}/${testId}/joe`;
     const issuer = await Issuer.webfinger(input);
-    log('webfinger using', input, 'discovered', issuer.issuer);
+    log('webfinger using', input, 'discovered', issuer.issuer, JSON.stringify(issuer, null, 4));
     assert.equal(issuer.issuer, `${root}/${rpId}/${testId}`);
   });
 
@@ -34,7 +32,7 @@ describe('Discovery', function () {
     const testId = 'rp-discovery-webfinger-acct';
     const input = `acct:${rpId}.${testId}@${url.parse(root).host}`;
     const issuer = await Issuer.webfinger(input);
-    log('webfinger using', input, 'discovered', issuer.issuer);
+    log('webfinger using', input, 'discovered', issuer.issuer, JSON.stringify(issuer, null, 4));
     assert.equal(issuer.issuer, `${root}/${rpId}/${testId}`);
   });
 
@@ -46,7 +44,7 @@ describe('Discovery', function () {
       reject();
     } catch (err) {
       log('caught', err);
-      assert.equal(err.message, 'discovered issuer mismatch');
+      assert.equal(err.message, `discovered issuer mismatch, expected ${root}/${rpId}/rp-discovery-issuer-not-matching-config, got: https://example.com`);
     }
   });
 
@@ -73,7 +71,7 @@ describe('Discovery', function () {
     const jwks = await issuer.keystore();
 
     assert.equal(jwks.all().length, 4);
-    log('fetched jwks_uri', JSON.stringify(jwks.toJSON(), null, 4));
+    log('fetched jwks_uri', JSON.stringify(jwks.toJWKS(), null, 4));
   });
 
   it('rp-discovery-webfinger-unknown-member', async function () {
@@ -91,7 +89,7 @@ describe('Discovery', function () {
       reject();
     } catch (err) {
       log('caught', err);
-      assert.equal(err.message, 'invalid issuer location');
+      assert.equal(err.message, `invalid issuer location ${root.replace('https:', 'http:')}/${rpId}/rp-discovery-webfinger-http-href`);
     }
   });
 });

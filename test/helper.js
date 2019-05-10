@@ -1,8 +1,6 @@
-'use strict';
-
 /* eslint-disable no-console */
 
-const { Issuer } = require('openid-client');
+const { Issuer, custom } = require('openid-client');
 const path = require('path');
 const fse = require('fs-extra');
 const fs = require('fs');
@@ -10,6 +8,11 @@ const tar = require('tar');
 const got = require('got');
 const url = require('url');
 const timekeeper = require('timekeeper');
+const base64url = require('base64url');
+const crypto = require('crypto');
+
+const timeout = opts => Object.assign({ timeout: 5000 }, opts);
+Issuer[custom.http_options] = timeout;
 
 let rpId = 'node-openid-client';
 const echoUrl = 'https://limitless-retreat-96294.herokuapp.com';
@@ -17,16 +20,26 @@ const root = process.env.ISSUER || 'https://rp.certification.openid.net:8080';
 const redirectUri = `https://${rpId}.dev/cb`;
 
 const [responseType, profile] = (() => {
-  const last = process.argv[process.argv.length - 1];
-  if (last.startsWith('@')) {
-    return last.slice(1).split('-');
+  const fgrep = process.argv.findIndex(a => a === '--fgrep');
+  if (fgrep === -1) {
+    return [];
   }
+
+  const value = process.argv[fgrep + 1];
+  if (value.startsWith('@')) {
+    return value.slice(1).split('-');
+  }
+
   return [];
 })();
 
 if (responseType && profile) {
   rpId = `${rpId}-${profile}-${responseType}`;
 }
+
+console.log('RP Identifier', rpId);
+const logsLocation = `${root}/log/${rpId}`;
+console.log('Logs location', logsLocation);
 
 async function syncTime() {
   const { headers: { date } } = await got.head(root);
@@ -36,7 +49,7 @@ async function syncTime() {
 before(syncTime);
 
 before(async function () {
-  const logIndex = await got(`${root}/log/${rpId}`);
+  const logIndex = await got(logsLocation);
   if (/Clear all test logs/.exec(logIndex.body)) {
     console.log('Clearing logs');
     await got(`${root}/clear/${rpId}`);
@@ -45,22 +58,20 @@ before(async function () {
 });
 
 before(function kickstartEcho() {
-  return got.get(echoUrl).then(() => {}, () => {});
+  return got.get(echoUrl).catch(() => {});
 });
-
-Issuer.defaultHttpOptions = { timeout: 5000 };
 
 if (profile) {
   const profileFolder = path.resolve('logs', profile);
   fse.emptyDirSync(`${profileFolder}/${responseType}`);
   after(async function () {
-    const logIndex = await got(`${root}/log/${rpId}`);
+    const logIndex = await got(logsLocation);
     if (/Download tar file/.exec(logIndex.body)) {
       await new Promise((resolve, reject) => {
         console.log('Downloading logs');
         got.stream(`${root}/mktar/${rpId}`)
-          .pipe(tar.Extract({
-            path: profileFolder,
+          .pipe(tar.x({
+            cwd: profileFolder,
           }))
           .on('close', () => {
             fse.move(`${profileFolder}/${rpId}`, `${profileFolder}/${responseType}`, {
@@ -83,7 +94,9 @@ let testId;
 global.log = function () {};
 
 function myIt(...args) {
-  if (args[0].startsWith('rp-')) testId = args[0];
+  if (args[0].startsWith('rp-')) {
+    [testId] = args;
+  }
   const localTestId = testId.includes(' ') ? testId.substring(0, testId.indexOf(' ')) : testId;
   if (args[1]) {
     it(args[0], async function () {
@@ -117,14 +130,16 @@ myIt.skip = it.skip;
 myIt.only = it.only;
 
 function myDescribe(...args) {
-  if (args[0].startsWith('rp-')) testId = args[0];
+  if (args[0].startsWith('rp-')) {
+    [testId] = args;
+  }
   describe.apply(this, args);
 }
 myDescribe.skip = describe.skip;
 myDescribe.only = describe.only;
 
 module.exports = {
-  noFollow: { followRedirect: false },
+  noFollow: { timeout: 5000, followRedirect: false },
   root,
   it: myIt,
   describe: myDescribe,
@@ -132,9 +147,9 @@ module.exports = {
   syncTime,
   redirect_uri: redirectUri,
   redirect_uris: [redirectUri],
-  async authorizationCallback(client, ...params) {
+  async callback(client, ...params) {
     try {
-      const res = await client.authorizationCallback(...params);
+      const res = await client.callback(...params);
       log('authentication callback succeeded', JSON.stringify(res, null, 4));
       return res;
     } catch (err) {
@@ -163,15 +178,17 @@ module.exports = {
   },
   async discover(test) {
     const issuer = await Issuer.discover(`${root}/${rpId}/${test}`);
-    log('discovered', issuer.issuer);
+    issuer[custom.http_options] = timeout;
+    log('discovered', issuer.issuer, JSON.stringify(issuer, null, 4));
     return issuer;
   },
   async register(test, metadata, keystore) {
     const issuer = await Issuer.discover(`${root}/${rpId}/${test}`);
-    log('discovered', issuer.issuer);
+    issuer[custom.http_options] = timeout;
+    log('discovered', issuer.issuer, JSON.stringify(issuer, null, 4));
 
     const properties = Object.assign({
-      client_name: Issuer.defaultHttpOptions.headers['User-Agent'],
+      client_name: 'openid-client/v3.x (https://github.com/panva/node-openid-client)',
       redirect_uris: [redirectUri],
       contacts: ['dummy@dummy.org'],
       response_types: responseType ? [responseType.replace(/\+/g, ' ')] : ['code', 'id_token', 'code token', 'code id_token', 'id_token token', 'code id_token token', 'none'],
@@ -179,11 +196,13 @@ module.exports = {
     }, metadata);
 
     log('registering client', JSON.stringify(properties, null, 4));
-    const client = await issuer.Client.register(properties, { keystore });
+    const client = await issuer.Client.register(properties, { jwks: (keystore && keystore.toJWKS(true)) || undefined });
     log('registered client', client.client_id, JSON.stringify(client.metadata, null, 4));
-    client.CLOCK_TOLERANCE = 5;
+    client[custom.http_options] = timeout;
+    client[custom.clock_tolerance] = 5;
     return { issuer, client };
   },
+  random() { return base64url(crypto.randomBytes(32)); },
   reject() { throw new Error('expected a rejection'); },
   echo: {
     async post(body, type) {

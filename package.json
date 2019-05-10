@@ -1,6 +1,6 @@
 {
   "name": "openid-client-conformance-tests",
-  "version": "2.0.0",
+  "version": "3.0.0",
   "description": "node's openid-client library conformance tests",
   "scripts": {
     "test": "mocha",
@@ -12,31 +12,29 @@
     "id_token+token-implicit": "mocha --fgrep @id_token+token-implicit",
     "code+id_token-hybrid": "mocha --fgrep @code+id_token-hybrid",
     "code+token-hybrid": "mocha --fgrep @code+token-hybrid",
-    "code+id_token+token-hybrid": "mocha --fgrep @code+id_token+token-hybrid",
-    "coverage": "istanbul cover --root node_modules/openid-client _mocha"
+    "code+id_token+token-hybrid": "mocha --fgrep @code+id_token+token-hybrid"
   },
   "repository": "panva/openid-client-conformance-tests",
   "engines": {
-    "node": ">=7.6.0"
+    "node": ">=12.0.0"
   },
   "homepage": "https://github.com/panva/openid-client-conformance-tests",
   "author": "Filip Skokan",
   "license": "MIT",
   "dependencies": {
-    "base64url": "^2.0.0",
-    "fs-extra": "^1.0.0",
+    "base64url": "^3.0.1",
+    "fs-extra": "^7.0.1",
     "got": "^9.6.0",
     "lodash": "^4.17.11",
-    "mocha": "^3.1.2",
-    "nock": "^9.6.1",
-    "openid-client": "^2.0.0",
-    "tar": "^2.2.1",
-    "timekeeper": "^1.0.0"
+    "mocha": "^6.1.4",
+    "nock": "^11.0.0-beta.14",
+    "openid-client": "^3.0.0",
+    "tar": "^4.4.8",
+    "timekeeper": "^2.2.0"
   },
   "devDependencies": {
-    "eslint": "^3.9.1",
-    "eslint-config-airbnb-base": "^10.0.0",
-    "eslint-plugin-import": "^2.16.0",
-    "istanbul": "next"
+    "eslint": "^5.16.0",
+    "eslint-config-airbnb-base": "^13.1.0",
+    "eslint-plugin-import": "^2.17.2"
   }
 }

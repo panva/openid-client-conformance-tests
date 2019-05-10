@@ -1,18 +1,17 @@
-'use strict';
+const { strict: assert } = require('assert');
 
 const { forEach } = require('lodash');
-const jose = require('node-jose'); // eslint-disable-line import/no-extraneous-dependencies
+const jose = require('@panva/jose'); // eslint-disable-line import/no-extraneous-dependencies
 const {
   noFollow,
   redirect_uri,
   register,
   describe,
   authorize,
-  authorizationCallback,
+  callback,
   it,
+  random,
 } = require('./helper');
-
-const assert = require('assert');
 
 describe('Client Authentication', function () {
   describe('rp-token_endpoint-client_secret_basic', function () {
@@ -25,11 +24,11 @@ describe('Client Authentication', function () {
       it(profile, async function () {
         const { client } = await register('rp-token_endpoint-client_secret_basic', { token_endpoint_auth_method: 'client_secret_basic' });
         assert.equal(client.token_endpoint_auth_method, 'client_secret_basic');
-        const nonce = String(Math.random());
+        const nonce = random();
         const authorization = await authorize(client.authorizationUrl({ redirect_uri, nonce, response_type }), noFollow);
 
         const params = client.callbackParams(authorization.headers.location.replace('#', '?'));
-        const tokens = await authorizationCallback(client, redirect_uri, params, { nonce, response_type });
+        const tokens = await callback(client, redirect_uri, params, { nonce, response_type });
         assert(tokens);
       });
     });
@@ -42,7 +41,7 @@ describe('Client Authentication', function () {
     const authorization = await authorize(client.authorizationUrl({ redirect_uri, response_type }), noFollow);
 
     const params = client.callbackParams(authorization.headers.location);
-    const tokens = await authorizationCallback(client, redirect_uri, params, { response_type });
+    const tokens = await callback(client, redirect_uri, params, { response_type });
     assert(tokens);
   });
 
@@ -53,20 +52,20 @@ describe('Client Authentication', function () {
     const authorization = await authorize(client.authorizationUrl({ redirect_uri, response_type }), noFollow);
 
     const params = client.callbackParams(authorization.headers.location);
-    const tokens = await authorizationCallback(client, redirect_uri, params, { response_type });
+    const tokens = await callback(client, redirect_uri, params, { response_type });
     assert(tokens);
   });
 
   it('rp-token_endpoint-private_key_jwt', async function () {
-    const keystore = jose.JWK.createKeyStore();
-    await keystore.generate('EC', 'P-256');
+    const keystore = new jose.JWKS.KeyStore();
+    await keystore.generate('EC');
     const response_type = 'code';
     const { client } = await register('rp-token_endpoint-private_key_jwt', { token_endpoint_auth_method: 'private_key_jwt' }, keystore);
     assert.equal(client.token_endpoint_auth_method, 'private_key_jwt');
     const authorization = await authorize(client.authorizationUrl({ redirect_uri, response_type }), noFollow);
 
     const params = client.callbackParams(authorization.headers.location);
-    const tokens = await authorizationCallback(client, redirect_uri, params, { response_type });
+    const tokens = await callback(client, redirect_uri, params, { response_type });
     assert(tokens);
   });
 });

@@ -1,18 +1,17 @@
-'use strict';
+const { strict: assert } = require('assert');
 
 const { forEach } = require('lodash');
 const {
   noFollow,
   redirect_uri,
   register,
+  random,
   reject,
   describe,
   authorize,
-  authorizationCallback,
+  callback,
   it,
 } = require('./helper');
-
-const assert = require('assert');
 
 describe('nonce Request Parameter', function () {
   describe('rp-nonce-unless-code-flow', function () {
@@ -20,12 +19,11 @@ describe('nonce Request Parameter', function () {
       '@id_token-implicit': 'id_token',
       '@id_token+token-implicit': 'id_token token',
       '@code+id_token-hybrid': 'code id_token',
-      '@code+token-hybrid': 'code token',
       '@code+id_token+token-hybrid': 'code id_token token',
     }, (response_type, profile) => {
       it(profile, async function () {
         const { client } = await register('rp-nonce-unless-code-flow', { });
-        const nonce = String(Math.random());
+        const nonce = random();
         try {
           client.authorizationUrl({ redirect_uri, response_type });
           reject();
@@ -35,7 +33,7 @@ describe('nonce Request Parameter', function () {
         const authorization = await authorize(client.authorizationUrl({ nonce, redirect_uri, response_type }), noFollow);
 
         const params = client.callbackParams(authorization.headers.location.replace('#', '?'));
-        const tokens = await authorizationCallback(client, redirect_uri, params, { nonce, response_type });
+        const tokens = await callback(client, redirect_uri, params, { nonce, response_type });
         assert(tokens);
       });
     });
@@ -52,15 +50,15 @@ describe('nonce Request Parameter', function () {
     }, (response_type, profile) => {
       it(profile, async function () {
         const { client } = await register('rp-nonce-invalid', { });
-        const nonce = String(Math.random());
+        const nonce = random();
         const authorization = await authorize(client.authorizationUrl({ redirect_uri, response_type, nonce }), noFollow);
 
         const params = client.callbackParams(authorization.headers.location.replace('#', '?'));
         try {
-          await authorizationCallback(client, redirect_uri, params, { nonce, response_type });
+          await callback(client, redirect_uri, params, { nonce, response_type });
           reject();
         } catch (err) {
-          assert.equal(err.message, 'nonce mismatch');
+          assert.equal(err.message, `nonce mismatch, expected ${nonce}, got: 012345678`);
         }
       });
     });

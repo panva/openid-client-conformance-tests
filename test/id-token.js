@@ -1,19 +1,20 @@
-'use strict';
+const { strict: assert } = require('assert');
 
 const { forEach } = require('lodash');
-const jose = require('node-jose'); // eslint-disable-line import/no-extraneous-dependencies
+const jose = require('@panva/jose'); // eslint-disable-line import/no-extraneous-dependencies
 const {
   noFollow,
   redirect_uri,
   register,
   reject,
+  root,
   describe,
+  rpId,
+  random,
   authorize,
-  authorizationCallback,
+  callback,
   it,
 } = require('./helper');
-
-const assert = require('assert');
 
 describe('ID Token', function () {
   describe('rp-id_token-bad-sig-rs256', function () {
@@ -28,15 +29,15 @@ describe('ID Token', function () {
       it(profile, async function () {
         const { client } = await register('rp-id_token-bad-sig-rs256', { id_token_signed_response_alg: 'RS256' });
         assert.equal(client.id_token_signed_response_alg, 'RS256');
-        const nonce = String(Math.random());
+        const nonce = random();
         const authorization = await authorize(client.authorizationUrl({ redirect_uri, nonce, response_type }), noFollow);
 
         const params = client.callbackParams(authorization.headers.location.replace('#', '?'));
         try {
-          await authorizationCallback(client, redirect_uri, params, { nonce, response_type });
+          await callback(client, redirect_uri, params, { nonce, response_type });
           reject();
         } catch (err) {
-          assert.equal(err.message, 'invalid signature');
+          assert.equal(err.message, 'failed to validate JWT signature');
         }
       });
     });
@@ -50,24 +51,24 @@ describe('ID Token', function () {
 
     const params = client.callbackParams(authorization.headers.location);
     try {
-      await authorizationCallback(client, redirect_uri, params, { response_type });
+      await callback(client, redirect_uri, params, { response_type });
       reject();
     } catch (err) {
-      assert.equal(err.message, 'invalid signature');
+      assert.equal(err.message, 'failed to validate JWT signature');
     }
   });
 
   it('rp-id_token-sig+enc', async function () {
     const response_type = 'code';
-    const keystore = jose.JWK.createKeyStore();
-    await keystore.generate('RSA', 512);
+    const keystore = new jose.JWKS.KeyStore();
+    await keystore.generate('RSA');
     const { client } = await register('rp-id_token-sig+enc', { id_token_signed_response_alg: 'RS256', id_token_encrypted_response_alg: 'RSA1_5' }, keystore);
     assert.equal(client.id_token_signed_response_alg, 'RS256');
     assert.equal(client.id_token_encrypted_response_alg, 'RSA1_5');
     const authorization = await authorize(client.authorizationUrl({ redirect_uri, response_type }), noFollow);
 
     const params = client.callbackParams(authorization.headers.location);
-    const tokens = await authorizationCallback(client, redirect_uri, params, { response_type });
+    const tokens = await callback(client, redirect_uri, params, { response_type });
     assert(tokens);
   });
 
@@ -83,11 +84,11 @@ describe('ID Token', function () {
       it(profile, async function () {
         const { client } = await register('rp-id_token-sig-rs256', { id_token_signed_response_alg: 'RS256' });
         assert.equal(client.id_token_signed_response_alg, 'RS256');
-        const nonce = String(Math.random());
+        const nonce = random();
         const authorization = await authorize(client.authorizationUrl({ redirect_uri, nonce, response_type }), noFollow);
 
         const params = client.callbackParams(authorization.headers.location.replace('#', '?'));
-        const tokens = await authorizationCallback(client, redirect_uri, params, { nonce, response_type });
+        const tokens = await callback(client, redirect_uri, params, { nonce, response_type });
         assert(tokens);
       });
     });
@@ -100,7 +101,7 @@ describe('ID Token', function () {
     const authorization = await authorize(client.authorizationUrl({ redirect_uri, response_type }), noFollow);
 
     const params = client.callbackParams(authorization.headers.location);
-    const tokens = await authorizationCallback(client, redirect_uri, params, { response_type });
+    const tokens = await callback(client, redirect_uri, params, { response_type });
     assert(tokens);
   });
 
@@ -111,7 +112,7 @@ describe('ID Token', function () {
     const authorization = await authorize(client.authorizationUrl({ redirect_uri, response_type }), noFollow);
 
     const params = client.callbackParams(authorization.headers.location);
-    const tokens = await authorizationCallback(client, redirect_uri, params, { response_type });
+    const tokens = await callback(client, redirect_uri, params, { response_type });
     assert(tokens);
   });
 
@@ -128,7 +129,7 @@ describe('ID Token', function () {
     const authorization = await authorize(client.authorizationUrl({ redirect_uri, response_type }), noFollow);
 
     const params = client.callbackParams(authorization.headers.location);
-    const tokens = await authorizationCallback(client, redirect_uri, params, { response_type });
+    const tokens = await callback(client, redirect_uri, params, { response_type });
     assert(tokens);
   });
 
@@ -139,7 +140,7 @@ describe('ID Token', function () {
     const authorization = await authorize(client.authorizationUrl({ redirect_uri, response_type }), noFollow);
 
     const params = client.callbackParams(authorization.headers.location);
-    const tokens = await authorizationCallback(client, redirect_uri, params, { response_type });
+    const tokens = await callback(client, redirect_uri, params, { response_type });
     assert(tokens.id_token);
   });
 
@@ -150,15 +151,15 @@ describe('ID Token', function () {
     }, (response_type, profile) => {
       it(profile, async function () {
         const { client } = await register('rp-id_token-bad-c_hash', { });
-        const nonce = String(Math.random());
+        const nonce = random();
         const authorization = await authorize(client.authorizationUrl({ redirect_uri, nonce, response_type }), noFollow);
 
         const params = client.callbackParams(authorization.headers.location.replace('#', '?'));
         try {
-          await authorizationCallback(client, redirect_uri, params, { nonce, response_type });
+          await callback(client, redirect_uri, params, { nonce, response_type });
           reject();
         } catch (err) {
-          assert.equal(err.message, 'c_hash mismatch');
+          assert(err.message.match(/^c_hash mismatch, expected \S+, got: \S+$/));
         }
       });
     });
@@ -171,12 +172,12 @@ describe('ID Token', function () {
     }, (response_type, profile) => {
       it(profile, async function () {
         const { client } = await register('rp-id_token-missing-c_hash', { });
-        const nonce = String(Math.random());
+        const nonce = random();
         const authorization = await authorize(client.authorizationUrl({ redirect_uri, nonce, response_type }), noFollow);
 
         const params = client.callbackParams(authorization.headers.location.replace('#', '?'));
         try {
-          await authorizationCallback(client, redirect_uri, params, { nonce, response_type });
+          await callback(client, redirect_uri, params, { nonce, response_type });
           reject();
         } catch (err) {
           assert.equal(err.message, 'missing required property c_hash');
@@ -192,15 +193,15 @@ describe('ID Token', function () {
     }, (response_type, profile) => {
       it(profile, async function () {
         const { client } = await register('rp-id_token-bad-at_hash', { });
-        const nonce = String(Math.random());
+        const nonce = random();
         const authorization = await authorize(client.authorizationUrl({ redirect_uri, nonce, response_type }), noFollow);
 
         const params = client.callbackParams(authorization.headers.location.replace('#', '?'));
         try {
-          await authorizationCallback(client, redirect_uri, params, { nonce, response_type });
+          await callback(client, redirect_uri, params, { nonce, response_type });
           reject();
         } catch (err) {
-          assert.equal(err.message, 'at_hash mismatch');
+          assert(err.message.match(/^at_hash mismatch, expected \S+, got: \S+$/));
         }
       });
     });
@@ -213,12 +214,12 @@ describe('ID Token', function () {
     }, (response_type, profile) => {
       it(profile, async function () {
         const { client } = await register('rp-id_token-missing-at_hash', { });
-        const nonce = String(Math.random());
+        const nonce = random();
         const authorization = await authorize(client.authorizationUrl({ redirect_uri, nonce, response_type }), noFollow);
 
         const params = client.callbackParams(authorization.headers.location.replace('#', '?'));
         try {
-          await authorizationCallback(client, redirect_uri, params, { nonce, response_type });
+          await callback(client, redirect_uri, params, { nonce, response_type });
           reject();
         } catch (err) {
           assert.equal(err.message, 'missing required property at_hash');
@@ -238,15 +239,15 @@ describe('ID Token', function () {
     }, (response_type, profile) => {
       it(profile, async function () {
         const { client } = await register('rp-id_token-issuer-mismatch', { });
-        const nonce = String(Math.random());
+        const nonce = random();
         const authorization = await authorize(client.authorizationUrl({ redirect_uri, nonce, response_type }), noFollow);
 
         const params = client.callbackParams(authorization.headers.location.replace('#', '?'));
         try {
-          await authorizationCallback(client, redirect_uri, params, { nonce, response_type });
+          await callback(client, redirect_uri, params, { nonce, response_type });
           reject();
         } catch (err) {
-          assert.equal(err.message, 'unexpected iss value');
+          assert.equal(err.message, `unexpected iss value, expected ${root}/${rpId}/rp-id_token-issuer-mismatch, got: https://example.org/`);
         }
       });
     });
@@ -263,12 +264,12 @@ describe('ID Token', function () {
     }, (response_type, profile) => {
       it(profile, async function () {
         const { client } = await register('rp-id_token-iat', { });
-        const nonce = String(Math.random());
+        const nonce = random();
         const authorization = await authorize(client.authorizationUrl({ redirect_uri, nonce, response_type }), noFollow);
 
         const params = client.callbackParams(authorization.headers.location.replace('#', '?'));
         try {
-          await authorizationCallback(client, redirect_uri, params, { nonce, response_type });
+          await callback(client, redirect_uri, params, { nonce, response_type });
           reject();
         } catch (err) {
           assert.equal(err.message, 'missing required JWT property iat');
@@ -286,10 +287,10 @@ describe('ID Token', function () {
 
     const params = client.callbackParams(authorization.headers.location);
     try {
-      await authorizationCallback(client, redirect_uri, params, { response_type });
+      await callback(client, redirect_uri, params, { response_type });
       reject();
     } catch (err) {
-      assert.equal(err.message, 'invalid signature');
+      assert.equal(err.message, 'failed to validate JWT signature');
     }
   });
 
@@ -304,15 +305,15 @@ describe('ID Token', function () {
     }, (response_type, profile) => {
       it(profile, async function () {
         const { client } = await register('rp-id_token-aud', { });
-        const nonce = String(Math.random());
+        const nonce = random();
         const authorization = await authorize(client.authorizationUrl({ redirect_uri, nonce, response_type }), noFollow);
 
         const params = client.callbackParams(authorization.headers.location.replace('#', '?'));
         try {
-          await authorizationCallback(client, redirect_uri, params, { nonce, response_type });
+          await callback(client, redirect_uri, params, { nonce, response_type });
           reject();
         } catch (err) {
-          assert.equal(err.message, 'aud is missing the client_id');
+          assert.equal(err.message, `aud is missing the client_id, expected ${client.client_id} to be included in ["https://example.com/"]`);
         }
       });
     });
@@ -329,12 +330,12 @@ describe('ID Token', function () {
     }, (response_type, profile) => {
       it(profile, async function () {
         const { client } = await register('rp-id_token-sub', { });
-        const nonce = String(Math.random());
+        const nonce = random();
         const authorization = await authorize(client.authorizationUrl({ redirect_uri, nonce, response_type }), noFollow);
 
         const params = client.callbackParams(authorization.headers.location.replace('#', '?'));
         try {
-          await authorizationCallback(client, redirect_uri, params, { nonce, response_type });
+          await callback(client, redirect_uri, params, { nonce, response_type });
           reject();
         } catch (err) {
           assert.equal(err.message, 'missing required JWT property sub');
@@ -354,11 +355,11 @@ describe('ID Token', function () {
     }, (response_type, profile) => {
       it(profile, async function () {
         const { client } = await register('rp-id_token-kid-absent-single-jwks', { });
-        const nonce = String(Math.random());
+        const nonce = random();
         const authorization = await authorize(client.authorizationUrl({ redirect_uri, nonce, response_type }), noFollow);
 
         const params = client.callbackParams(authorization.headers.location.replace('#', '?'));
-        const tokens = await authorizationCallback(client, redirect_uri, params, { nonce, response_type });
+        const tokens = await callback(client, redirect_uri, params, { nonce, response_type });
         assert(tokens);
       });
     });
@@ -375,15 +376,15 @@ describe('ID Token', function () {
     }, (response_type, profile) => {
       it(profile, async function () {
         const { client } = await register('rp-id_token-kid-absent-multiple-jwks', { });
-        const nonce = String(Math.random());
+        const nonce = random();
         const authorization = await authorize(client.authorizationUrl({ redirect_uri, nonce, response_type }), noFollow);
 
         const params = client.callbackParams(authorization.headers.location.replace('#', '?'));
         try {
-          await authorizationCallback(client, redirect_uri, params, { nonce, response_type });
+          await callback(client, redirect_uri, params, { nonce, response_type });
           reject();
         } catch (err) {
-          assert.equal(err.message, 'multiple matching keys, kid must be provided');
+          assert.equal(err.message, 'multiple matching keys found in issuer\'s jwks_uri for key parameters {"alg":"RS256"}, kid must be provided in this case');
         }
       });
     });

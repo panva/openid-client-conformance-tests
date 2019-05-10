@@ -1,12 +1,10 @@
-'use strict';
+const { strict: assert } = require('assert');
 
 const {
   register,
   describe,
   it,
 } = require('./helper');
-
-const assert = require('assert');
 
 describe('Dynamic Client Registration', function () {
   it('rp-registration-dynamic @code-dynamic', async function () {

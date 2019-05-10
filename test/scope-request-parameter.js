@@ -1,4 +1,4 @@
-'use strict';
+const { strict: assert } = require('assert');
 
 const { forEach } = require('lodash');
 const base64url = require('base64url');
@@ -6,13 +6,12 @@ const {
   noFollow,
   redirect_uri,
   register,
+  random,
   describe,
   authorize,
-  authorizationCallback,
+  callback,
   it,
 } = require('./helper');
-
-const assert = require('assert');
 
 describe('scope Request Parameter', function () {
   describe('rp-scope-userinfo-claims', function () {
@@ -26,15 +25,17 @@ describe('scope Request Parameter', function () {
     }, (response_type, profile) => {
       it(profile, async function () {
         const { client } = await register('rp-scope-userinfo-claims', { });
-        const nonce = String(Math.random());
-        const authorization = await authorize(client.authorizationUrl({ nonce, redirect_uri, response_type, scope: 'openid email' }), noFollow);
+        const nonce = random();
+        const authorization = await authorize(client.authorizationUrl({
+          nonce, redirect_uri, response_type, scope: 'openid email',
+        }), noFollow);
 
         const params = client.callbackParams(authorization.headers.location.replace('#', '?'));
-        const tokens = await authorizationCallback(client, redirect_uri, params, { nonce, response_type });
+        const tokens = await callback(client, redirect_uri, params, { nonce, response_type });
 
         const userinfo = await (async () => {
           if (tokens.access_token) {
-            return await client.userinfo(tokens);
+            return client.userinfo(tokens);
           }
           return JSON.parse(base64url.decode(tokens.id_token.split('.')[1]));
         })();
