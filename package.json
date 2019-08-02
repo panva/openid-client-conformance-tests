@@ -23,18 +23,18 @@
   "license": "MIT",
   "dependencies": {
     "base64url": "^3.0.1",
-    "fs-extra": "^7.0.1",
+    "fs-extra": "^8.1.0",
     "got": "^9.6.0",
-    "lodash": "^4.17.11",
-    "mocha": "^6.1.4",
-    "nock": "^11.0.0-beta.14",
-    "openid-client": "^3.0.0",
-    "tar": "^4.4.8",
+    "lodash": "^4.17.15",
+    "mocha": "^6.2.0",
+    "nock": "11.0.0-beta.29",
+    "openid-client": "^3.2.3",
+    "tar": "^4.4.10",
     "timekeeper": "^2.2.0"
   },
   "devDependencies": {
     "eslint": "^5.16.0",
-    "eslint-config-airbnb-base": "^13.1.0",
-    "eslint-plugin-import": "^2.17.2"
+    "eslint-config-airbnb-base": "^13.2.0",
+    "eslint-plugin-import": "^2.18.2"
   }
 }
