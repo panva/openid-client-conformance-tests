@@ -5,14 +5,12 @@ const path = require('path');
 const fse = require('fs-extra');
 const fs = require('fs');
 const tar = require('tar');
-const got = require('got');
+const got = require('got').extend({ timeout: 5000 });
 const url = require('url');
-const timekeeper = require('timekeeper');
 const base64url = require('base64url');
 const crypto = require('crypto');
 
-const timeout = opts => Object.assign({ timeout: 5000 }, opts);
-Issuer[custom.http_options] = timeout;
+custom.setHttpOptionsDefaults({ timeout: 5000 });
 
 let rpId = 'node-openid-client';
 const echoUrl = 'https://limitless-retreat-96294.herokuapp.com';
@@ -40,13 +38,6 @@ if (responseType && profile) {
 console.log('RP Identifier', rpId);
 const logsLocation = `${root}/log/${rpId}`;
 console.log('Logs location', logsLocation);
-
-async function syncTime() {
-  const { headers: { date } } = await got.head(root);
-  timekeeper.travel(new Date(date));
-}
-
-before(syncTime);
 
 before(async function () {
   const logIndex = await got(logsLocation);
@@ -139,12 +130,11 @@ myDescribe.skip = describe.skip;
 myDescribe.only = describe.only;
 
 module.exports = {
-  noFollow: { timeout: 5000, followRedirect: false },
+  noFollow: { followRedirect: false },
   root,
   it: myIt,
   describe: myDescribe,
   rpId,
-  syncTime,
   redirect_uri: redirectUri,
   redirect_uris: [redirectUri],
   async callback(client, ...params) {
@@ -178,13 +168,11 @@ module.exports = {
   },
   async discover(test) {
     const issuer = await Issuer.discover(`${root}/${rpId}/${test}`);
-    issuer[custom.http_options] = timeout;
     log('discovered', issuer.issuer, JSON.stringify(issuer, null, 4));
     return issuer;
   },
   async register(test, metadata, keystore) {
     const issuer = await Issuer.discover(`${root}/${rpId}/${test}`);
-    issuer[custom.http_options] = timeout;
     log('discovered', issuer.issuer, JSON.stringify(issuer, null, 4));
 
     const properties = Object.assign({
@@ -198,7 +186,6 @@ module.exports = {
     log('registering client', JSON.stringify(properties, null, 4));
     const client = await issuer.Client.register(properties, { jwks: (keystore && keystore.toJWKS(true)) || undefined });
     log('registered client', client.client_id, JSON.stringify(client.metadata, null, 4));
-    client[custom.http_options] = timeout;
     client[custom.clock_tolerance] = 5;
     return { issuer, client };
   },

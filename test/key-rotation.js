@@ -11,10 +11,9 @@ const {
   authorize,
   callback,
   it,
-  syncTime,
 } = require('./helper');
 
-afterEach(syncTime);
+afterEach(() => timekeeper.reset());
 
 describe('Key Rotation', function () {
   it('rp-key-rotation-op-sign-key @code-config,@code-dynamic', async function () {

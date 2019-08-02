@@ -1,7 +1,7 @@
 const { forEach } = require('lodash');
 const { strict: assert } = require('assert');
 const url = require('url');
-const got = require('got');
+const got = require('got').extend({ timeout: 5000 });
 const querystring = require('querystring');
 const {
   noFollow,

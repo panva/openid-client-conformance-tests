@@ -28,7 +28,7 @@
     "lodash": "^4.17.15",
     "mocha": "^6.2.0",
     "nock": "11.0.0-beta.29",
-    "openid-client": "^3.2.3",
+    "openid-client": "^3.3.0",
     "tar": "^4.4.10",
     "timekeeper": "^2.2.0"
   },
