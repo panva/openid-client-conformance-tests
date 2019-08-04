@@ -4,7 +4,7 @@ const url = require('url');
 const { Issuer } = require('openid-client');
 
 const { strict: assert } = require('assert');
-const got = require('got').extend({ timeout: 5000 });
+const got = require('got').extend({ timeout: parseInt(process.env.TIMEOUT, 10) || 7500 });
 const nock = require('nock');
 const {
   discover,

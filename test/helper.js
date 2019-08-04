@@ -5,12 +5,12 @@ const path = require('path');
 const fse = require('fs-extra');
 const fs = require('fs');
 const tar = require('tar');
-const got = require('got').extend({ timeout: 5000 });
+const got = require('got').extend({ timeout: parseInt(process.env.TIMEOUT, 10) || 7500 });
 const url = require('url');
 const base64url = require('base64url');
 const crypto = require('crypto');
 
-custom.setHttpOptionsDefaults({ timeout: 5000 });
+custom.setHttpOptionsDefaults({ timeout: parseInt(process.env.TIMEOUT, 10) || 7500 });
 
 let rpId = 'node-openid-client';
 const echoUrl = 'https://limitless-retreat-96294.herokuapp.com';
