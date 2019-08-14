@@ -52,7 +52,7 @@ before(function kickstartEcho() {
   return got.get(echoUrl).catch(() => {});
 });
 
-if (profile) {
+if (profile && !('CI' in process.env)) {
   const profileFolder = path.resolve('logs', profile);
   fse.emptyDirSync(`${profileFolder}/${responseType}`);
   after(async function () {
@@ -91,7 +91,7 @@ function myIt(...args) {
   const localTestId = testId.includes(' ') ? testId.substring(0, testId.indexOf(' ')) : testId;
   if (args[1]) {
     it(args[0], async function () {
-      if (profile) {
+      if (profile && !('CI' in process.env)) {
         const profileFolder = path.resolve('logs', profile);
         const rpFolder = `${profileFolder}/${rpId}`;
         const logFile = `${rpFolder}/${localTestId}.log`;
