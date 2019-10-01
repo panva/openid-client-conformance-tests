@@ -1,7 +1,7 @@
 const { strict: assert } = require('assert');
 
 const { forEach } = require('lodash');
-const jose = require('@panva/jose'); // eslint-disable-line import/no-extraneous-dependencies
+const jose = require('jose'); // eslint-disable-line import/no-extraneous-dependencies
 const {
   noFollow,
   redirect_uri,

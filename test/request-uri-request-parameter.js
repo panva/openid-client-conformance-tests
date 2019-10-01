@@ -1,5 +1,5 @@
 const { strict: assert } = require('assert');
-const jose = require('@panva/jose'); // eslint-disable-line import/no-extraneous-dependencies
+const jose = require('jose'); // eslint-disable-line import/no-extraneous-dependencies
 
 const {
   echo,
