@@ -14,7 +14,7 @@ const {
 } = require('./helper');
 
 describe('nonce Request Parameter', function () {
-  describe('rp-nonce-unless-code-flow', function () {
+  describe.skip('rp-nonce-unless-code-flow', function () {
     forEach({
       '@id_token-implicit': 'id_token',
       '@id_token+token-implicit': 'id_token token',
