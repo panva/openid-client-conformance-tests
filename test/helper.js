@@ -10,6 +10,8 @@ const url = require('url');
 const base64url = require('base64url');
 const crypto = require('crypto');
 
+const random = () => base64url(crypto.randomBytes(32));
+
 custom.setHttpOptionsDefaults({ timeout: parseInt(process.env.TIMEOUT, 10) || 7500 });
 
 let rpId = 'node-openid-client';
@@ -189,16 +191,13 @@ module.exports = {
     client[custom.clock_tolerance] = 5;
     return { issuer, client };
   },
-  random() { return base64url(crypto.randomBytes(32)); },
+  random,
   reject() { throw new Error('expected a rejection'); },
   echo: {
     async post(body, type) {
-      await got.post(echoUrl, { body, headers: { 'content-type': type } });
-      return `${echoUrl}/${Date.now()}`;
-    },
-    async get() {
-      const { body } = await got.get(echoUrl);
-      return body;
+      const randomPath = `${echoUrl}/${random()}`;
+      await got.post(randomPath, { body, headers: { 'content-type': type } });
+      return randomPath;
     },
   },
 };
