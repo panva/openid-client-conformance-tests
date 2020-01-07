@@ -380,12 +380,11 @@ describe('ID Token', function () {
         const authorization = await authorize(client.authorizationUrl({ redirect_uri, nonce, response_type }), noFollow);
 
         const params = client.callbackParams(authorization.headers.location.replace('#', '?'));
-        try {
-          await callback(client, redirect_uri, params, { nonce, response_type });
-          reject();
-        } catch (err) {
-          assert.equal(err.message, 'multiple matching keys found in issuer\'s jwks_uri for key parameters {"alg":"RS256"}, kid must be provided in this case');
-        }
+        return callback(client, redirect_uri, params, { nonce, response_type }).catch((err) => {
+          if (err.message !== 'multiple matching keys found in issuer\'s jwks_uri for key parameters {"alg":"RS256"}, kid must be provided in this case') {
+            throw err;
+          }
+        });
       });
     });
   });
