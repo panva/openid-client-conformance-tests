@@ -53,7 +53,7 @@ describe('UserInfo Endpoint', function () {
 
         const params = client.callbackParams(authorization.headers.location.replace('#', '?'));
         const tokens = await callback(client, redirect_uri, params, { nonce, response_type });
-        const userinfo = await userinfoCall(client, tokens, { via: 'body', verb: 'post' });
+        const userinfo = await userinfoCall(client, tokens, { via: 'body', method: 'post' });
         assert(userinfo);
       });
     });
