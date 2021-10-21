@@ -70,7 +70,7 @@ describe('Discovery', function () {
     const issuer = await discover('rp-discovery-jwks_uri-keys');
     const jwks = await issuer.keystore();
 
-    assert.equal(jwks.all().length, 4);
+    assert.equal([...jwks].length, 4);
     log('fetched jwks_uri', JSON.stringify(jwks.toJWKS(), null, 4));
   });
 
